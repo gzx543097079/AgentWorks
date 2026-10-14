@@ -23,7 +23,7 @@
 | 内容 | Codex 桌面端 | Claude 桌面端 Code 模式 |
 |---|---|---|
 | 共用规则 | `AGENTS.md` | `CLAUDE.md` 导入同一规则 |
-| 自动生成的原生角色 | `.codex/agents/*.toml` | `.claude/agents/agentworks-*.md` |
+| 自动生成的原生角色 | `.codex/agents/agentworks-*.toml` | `.claude/agents/agentworks-*.md` |
 | 启动方式 | 自然语言；可选 `$agentworks` | 自然语言；可选 `/agentworks` |
 | 项目进度 | 同一份 `.agentworks/` | 同一份 `.agentworks/` |
 

@@ -28,11 +28,11 @@ def generated(root=ROOT):
         ])
         note = MARKER + "; edit config/team.json and .agents/skills/."
         yield "roles/" + role["id"] + ".md", ("<!-- " + note + " -->\n# " + role["name"] + "\n\n" + instructions + "\n").encode()
-        fields = {"name": role["id"], "description": role["description"], "developer_instructions": instructions}
-        yield ".codex/agents/" + role["id"] + ".toml", ("# " + note + "\n" + "\n".join(
+        name = "agentworks-" + role["id"].replace("_", "-")
+        fields = {"name": name, "description": role["description"], "developer_instructions": instructions}
+        yield ".codex/agents/" + name + ".toml", ("# " + note + "\n" + "\n".join(
             key + " = " + json.dumps(value, ensure_ascii=False) for key, value in fields.items()
         ) + "\n").encode()
-        name = "agentworks-" + role["id"].replace("_", "-")
         frontmatter = "\n".join(key + ": " + json.dumps(value, ensure_ascii=False) for key, value in {
             "name": name, "description": role["description"], "model": "inherit"
         }.items())
@@ -86,13 +86,10 @@ def synchronize(root=ROOT, check=False):
             if not check:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(content)
-    # Legacy generated role naming; preserve unrelated adapters, including files
-    # with different naming conventions that this generator never owned.
+    # Retire obsolete generated names while preserving user-authored adapters.
     for folder in ("roles", ".codex/agents", ".claude/agents"):
         for path in (root / folder).glob("*"):
             if path.is_symlink() or not path.is_file() or path.suffix not in (".md", ".toml"):
-                continue
-            if folder == ".codex/agents" and path.stem.startswith("agentworks-"):
                 continue
             if str(path.relative_to(root)) not in expected and MARKER in path.read_text(encoding="utf-8"):
                 retired.append(path)

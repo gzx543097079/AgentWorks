@@ -1,12 +1,12 @@
 # AgentWorks
 
-**可在 Codex、Claude Code 等环境长期复用的海外产品多 Agent 团队。** 从游戏与工具机会研究，到产品定义、UI原型、独立评审、开发验收和运营迭代，保存每一步的交付与进度。
+**供 Codex 和 Claude Code 共用的海外产品多 Agent 团队。** 从游戏与工具机会研究，到产品定义、UI原型、独立评审、开发验收和运营迭代，保存每一步的交付与进度。
 
 15 个固定角色，全部采用 **20 年资深从业者标准**。这是专业能力框架，不是真实履历；AI 用户评审明确标注模拟，真实用户与经营数据单独记录。
 
 ## 直接开始
 
-在 Codex、Claude Code 或其他 Agent 工具中打开本仓库根目录，告诉它：
+在 Codex 或 Claude Code 中打开同一份仓库根目录，告诉它：
 
 > 使用 AgentWorks 查看当前项目，并从已保存的进度继续。
 
@@ -14,7 +14,22 @@
 
 > 使用 AgentWorks 新建一个海外产品项目，同时比较游戏和工具，按盈利证据挑选方向。
 
-平台入口和迁移见 [跨环境使用](docs/跨环境使用.md)。详细操作见 [使用指南](docs/使用指南.md)，角色与交接标准见 [协作约定](docs/协作约定.md)。
+两个平台都可以使用这两句话，不必记技能命令。切换平台时继续已有项目即可。
+
+平台入口和迁移见 [Codex / Claude Code 使用说明](docs/跨环境使用.md)。详细操作见 [使用指南](docs/使用指南.md)，角色与交接标准见 [协作约定](docs/协作约定.md)。
+
+## 一份配置，两个平台
+
+角色只维护 `config/team.json`，工作流只维护 `config/workflows.json`。两套原生角色文件是同步脚本生成的适配结果，你不需要分别修改。
+
+| 内容 | Codex | Claude Code |
+|---|---|---|
+| 共用团队规则 | 读取 `AGENTS.md` | `CLAUDE.md` 导入同一份 `AGENTS.md` |
+| 自动生成的原生角色 | `.codex/agents/*.toml` | `.claude/agents/agentworks-*.md` |
+| 启动方式 | 自然语言；可选 `$agentworks` | 自然语言；可选 `/agentworks` |
+| 项目记忆与进度 | 同一份 `.agentworks/` | 同一份 `.agentworks/` |
+
+在一边修改角色源后，运行 `python3 scripts/sync_agents.py` 就会同步两边。当前兼容维护范围为 Codex 和 Claude Code。
 
 ## 固定团队
 
@@ -36,7 +51,7 @@
 | 海外新用户体验评审 | 用资深研究方法模拟首次使用 |
 | 海外付费价值评审 | 价格理解、信任和价值的模拟评审 |
 
-角色唯一来源：`config/team.json`。同步生成 `roles/` 通用角色卡、`.codex/agents/` 和 `.claude/agents/`。所有环境共用 [团队运行手册](docs/团队运行手册.md)、工作流和项目记忆。
+角色唯一来源：`config/team.json`。同步生成 `roles/` 通用角色卡、`.codex/agents/` 和 `.claude/agents/`。两平台共用 [团队运行手册](docs/团队运行手册.md)、工作流和项目记忆。
 
 ## 协作流程
 

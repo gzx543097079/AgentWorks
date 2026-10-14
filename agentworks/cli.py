@@ -37,7 +37,8 @@ def doctor():
                 print("Claude 登录和模型连通性尚未验证；版本检查不会调用模型。")
         except (OSError, subprocess.SubprocessError) as exc:
             print(backend + " 检查失败：" + str(exc))
-    print("原生对话入口：AGENTS.md；Claude 兼容入口：CLAUDE.md；其他环境可读取 AGENT.md。")
+    print("支持平台：Codex（AGENTS.md）和 Claude Code（CLAUDE.md 导入共用规则）。")
+    print("两平台共用 config/team.json 和项目状态；原生角色配置由同步脚本自动生成。")
     print("运行数据默认保存在 .agentworks/，不会进入 Git。当前系统未安装常驻服务。")
     return sync.returncode
 

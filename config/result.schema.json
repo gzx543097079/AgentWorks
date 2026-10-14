@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "report", "verdict", "evidence", "artifacts", "next_actions"],
+  "properties": {
+    "status": {"type": "string", "enum": ["completed", "blocked"]},
+    "summary": {"type": "string"},
+    "report": {"type": "string"},
+    "verdict": {"type": "string", "enum": ["pass", "revise", "blocked", "not_applicable"]},
+    "evidence": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["kind", "source", "note"], "properties": {"kind": {"type": "string", "enum": ["source", "observation", "hypothesis", "simulated", "unknown"]}, "source": {"type": "string"}, "note": {"type": "string"}}}},
+    "artifacts": {"type": "array", "items": {"type": "string"}},
+    "next_actions": {"type": "array", "items": {"type": "string"}}
+  }
+}

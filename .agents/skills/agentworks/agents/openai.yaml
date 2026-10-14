@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentWorks 出海产品团队"
+  short_description: "复用十五个资深角色，从海外机会研究到产品设计、开发验收及运营迭代"
+  default_prompt: "使用 $agentworks 查看当前项目进度，并按已确认目标继续推进。"

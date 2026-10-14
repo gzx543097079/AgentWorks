@@ -1,0 +1,23 @@
+name: Check AgentWorks
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python scripts/sync_agents.py --check
+      - run: python -m unittest discover -s tests -v
+      - name: Validate generated TOML
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+          for path in Path('.codex/agents').glob('*.toml'):
+              data = tomllib.loads(path.read_text())
+              assert all(data.get(k) for k in ('name', 'description', 'developer_instructions'))
+          PY

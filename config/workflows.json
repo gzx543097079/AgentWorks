@@ -1,0 +1,61 @@
+{
+  "discovery": {
+    "name": "机会研究与比较", "requires": null,
+    "tasks": [
+      {"id": "games", "role": "market_researcher", "title": "研究海外游戏机会", "depends": [], "prompt": "研究最多5个适合小团队验证的海外游戏方向，按项目预算和市场约束形成有来源的机会卡。若项目限定工具，说明不适用并把精力用于邻近工具机会。"},
+      {"id": "tools", "role": "market_researcher", "title": "研究海外工具机会", "depends": [], "prompt": "独立研究最多5个海外工具方向。记录具体痛点、替代方案、付费依据、竞品来源和低成本验证实验。若限定游戏，研究辅助工具或说明不适用。"},
+      {"id": "channels", "role": "growth_operator", "title": "验证首批用户渠道", "depends": ["games", "tools"], "prompt": "检查候选机会的首批用户来源，列出具体可接触渠道、获取成本假设和验证动作。只研究和准备材料，不联系第三方。"},
+      {"id": "economics", "role": "commercial_analyst", "title": "比较盈利依据与验证成本", "depends": ["games", "tools", "channels"], "prompt": "比较游戏和工具的付费证据、同周期收入成本和最小验证投入。保留未知数，给出情景和敏感性分析。"},
+      {"id": "decision", "role": "director", "title": "形成项目候选与立项建议", "depends": ["games", "tools", "channels", "economics"], "gate": true, "prompt": "按证据推荐最多2个低成本验证对象及一个优先方向。pass 只表示研究交付可进入需求设计，不表示已盈利或已获用户验证；关键证据不足时 blocked 或 revise。"}
+    ]
+  },
+  "product": {
+    "name": "产品定义与实验设计", "requires": "discovery",
+    "tasks": [
+      {"id": "requirements", "role": "product_manager", "title": "定义最小产品", "depends": [], "prompt": "依据研究结果与项目简报，明确选定方向、用户任务、核心流程、最小范围、验收标准和停止条件。若多个方向仍未选择，输出 blocked 并说明所需决策。"},
+      {"id": "gameplay", "role": "game_designer", "title": "定义玩法或确认不适用", "depends": ["requirements"], "prompt": "游戏项目设计核心循环、操作反馈与可玩原型计划；工具项目明确不适用，避免强加游戏功能。"},
+      {"id": "measurement", "role": "data_analyst", "title": "定义测量与真实用户实验", "depends": ["requirements"], "prompt": "定义核心事件、指标口径、真实用户测试任务、样本局限以及成功和停止条件。区分定性发现与定量结论。"},
+      {"id": "scope", "role": "director", "title": "核对需求与实验范围", "depends": ["requirements", "gameplay", "measurement"], "gate": true, "prompt": "确认只有一个可实施方向，范围、验收和实验可执行。检查商业假设是否被误当事实，给出阶段结论。"}
+    ]
+  },
+  "design": {
+    "name": "原型、独立评审与修改", "requires": "product",
+    "tasks": [
+      {"id": "prototype", "role": "ui_designer", "title": "制作可操作界面原型", "depends": [], "artifact_prefix": "design/", "prompt": "按产品需求制作可操作原型，保存到当前产品工作区 design/；提供主流程、关键状态与视觉规范，实际检查可用的渲染结果。"},
+      {"id": "expert", "role": "reviewer_expert", "title": "资深用户独立评审", "depends": ["prototype"], "prompt": "只阅读产品要求和本次原型，独立执行任务并记录可观察的问题。不要阅读其他评审文件。所有用户动机解释标为模拟假设。"},
+      {"id": "newcomer", "role": "reviewer_newcomer", "title": "首次使用独立评审", "depends": ["prototype"], "prompt": "从第一次使用的角度评审原型，记录理解障碍和恢复路径。不要阅读其他评审文件；标记 AI 模拟。"},
+      {"id": "value", "role": "reviewer_value", "title": "付费价值独立评审", "depends": ["prototype"], "prompt": "独立检查价值表达和价格理解，不阅读其他评审意见，不编造付费意愿。"},
+      {"id": "locale", "role": "localization_specialist", "title": "目标市场本地化评审", "depends": ["prototype"], "prompt": "检查目标地区的界面文案、术语、格式和文字长度，给出替换文案及原因。"},
+      {"id": "triage", "role": "product_manager", "title": "逐条裁决评审反馈", "depends": ["expert", "newcomer", "value", "locale"], "prompt": "合并去重反馈，逐条标记采纳、延期或拒绝及理由，给出唯一的本轮修改清单。保留待真实用户验证的问题。"},
+      {"id": "revision", "role": "ui_designer", "title": "修改原型并检查结果", "depends": ["prototype", "triage"], "artifact_prefix": "design/", "prompt": "按产品裁决修改 design/ 中的原型，记录前后变化及实际渲染验证，避免未采纳意见扩大范围。"},
+      {"id": "design_gate", "role": "qa_engineer", "title": "独立验收修改后的原型", "depends": ["triage", "revision"], "gate": true, "prompt": "核验采纳的反馈是否解决及核心操作可用。缺陷阻塞时 revise，工具不足无法验证时 blocked。未通过不能自动进入开发。"}
+    ]
+  },
+  "build": {
+    "name": "开发、测试与修复", "requires": "design",
+    "tasks": [
+      {"id": "implementation", "role": "developer", "title": "实现可运行的最小产品", "depends": [], "artifact_prefix": "app/", "prompt": "依据已确认的产品与原型开发产品，代码保存在 app/，交付运行说明和必要测试。执行实际检查，不发布生产、不创建付费资源。"},
+      {"id": "test", "role": "qa_engineer", "title": "独立测试与缺陷报告", "depends": ["implementation"], "prompt": "独立核对验收标准，运行可用的测试及操作检查，记录缺陷与未验证范围。本任务可完成缺陷报告，下游工程师据此修复。"},
+      {"id": "fix", "role": "developer", "title": "修复缺陷并回归", "depends": ["implementation", "test"], "prompt": "修复测试中确认的问题并运行必要回归；没有问题时不做无关修改，报告验证结果。"},
+      {"id": "acceptance", "role": "qa_engineer", "title": "独立回归验收", "depends": ["test", "fix"], "gate": true, "prompt": "重新核对阻塞问题、核心任务和关键异常。存在阻塞缺陷返回 revise，环境缺失返回 blocked，实际验收通过才 pass。"}
+    ]
+  },
+  "launch": {
+    "name": "上线准备与运营方案", "requires": "build",
+    "tasks": [
+      {"id": "release", "role": "release_engineer", "title": "准备发布与恢复方案", "depends": [], "prompt": "检查当前构建、环境依赖、配置、素材来源、监控和回滚；生成发布操作方案。当前工作流只做准备，不执行生产发布。"},
+      {"id": "campaign", "role": "growth_operator", "title": "准备首轮获客实验与素材", "depends": [], "prompt": "针对产品和预算交付首轮获客实验、当地语言内容、渠道、指标和停止条件。未授权时不对外发布或投放。"},
+      {"id": "copy", "role": "localization_specialist", "title": "核对上线文案", "depends": ["campaign"], "prompt": "检查上线和推广文案是否准确适合目标地区，给出最终建议文案。"},
+      {"id": "launch_gate", "role": "director", "title": "汇总上线准备状态", "depends": ["release", "campaign", "copy"], "gate": true, "prompt": "列出准备完成与缺失项。pass 仅代表上线准备交付完成，绝不能声称产品已经上线。需要的账号、环境和用户授权写清楚。"}
+    ]
+  },
+  "growth": {
+    "name": "真实数据驱动的运营迭代", "requires": "launch",
+    "tasks": [
+      {"id": "analysis", "role": "data_analyst", "title": "分析真实用户与收入数据", "depends": [], "prompt": "读取 input/ 中的真实数据、来源说明和上线记录。无真实数据或上线记录时 blocked，列出所需数据；不产生示例经营结论。"},
+      {"id": "next_experiment", "role": "growth_operator", "title": "设计下一轮运营实验", "depends": ["analysis"], "prompt": "根据实际数据选择最有价值的一个增长实验，给出材料、预算、测量窗口和停止条件。"},
+      {"id": "product_iteration", "role": "product_manager", "title": "决定产品迭代范围", "depends": ["analysis", "next_experiment"], "prompt": "把真实数据与反馈转成最小迭代范围，区分运营问题与产品问题，记录采纳和拒绝原因。"},
+      {"id": "continue_gate", "role": "director", "title": "决定继续、修改或停止", "depends": ["analysis", "next_experiment", "product_iteration"], "gate": true, "prompt": "检查实验与现有证据，给出继续、修改或停止建议，指出下一轮需要进入 design、build 或 growth。"}
+    ]
+  }
+}

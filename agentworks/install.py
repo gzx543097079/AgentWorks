@@ -25,6 +25,7 @@ RULES = """{start}
 
 本仓库内嵌 AgentWorks（来源提交 {commit}），本仓库就是产品工作区。用户通过聊天运行海外产品团队，使用当前桌面会话的原生子 Agent 和工具，不另行启动模型命令行，不要求用户操作终端。
 
+- 与用户的回答、交付报告和项目文档一律使用简体中文；代码标识符、命令、路径和引用原文保持原样，目标市场文案使用当地语言。
 - 运行团队先读技能 `agentworks`（Codex `$agentworks`，Claude `/agentworks`）和 `.agentworks/engine/docs/团队运行手册.md`。原生角色名称以 `agentworks-` 开头，位于 `.codex/agents/` 与 `.claude/agents/`。
 - 手册中的 `config/`、`docs/`、`roles/` 在本仓库位于 `.agentworks/engine/` 下；技能位于 `.agents/skills/`（Claude 为 `.claude/skills/`）。
 - 进度接口：在仓库根目录运行 Python，先 `sys.path.insert(0, ".agentworks/engine")`，再 `from agentworks.desktop import Workspace; team = Workspace()`，用法见 `.agentworks/engine/docs/桌面内部接口.md`。本仓库只绑定一个项目，开始前先 `team.status()`。

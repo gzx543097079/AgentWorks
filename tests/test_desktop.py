@@ -179,7 +179,7 @@ class DesktopTests(unittest.TestCase):
             self.desktop.complete("alpha", task["ticket"])
         Path(task["result_file"]).write_text(json.dumps(result(), ensure_ascii=False), encoding="utf-8")
         self.assertEqual(self.desktop.complete("alpha", task["ticket"]), "completed")
-        names = sorted(path.name for path in run.iterdir())
+        names = sorted(path.name for path in run.iterdir() if path.is_file())
         self.assertEqual(names, ["1-attempt-1-desktop.json", "1-attempt-1-prompt.txt", "1-attempt-1-result.json"])
         report = self.desktop.store.workspace("alpha") / "docs/01-discovery/游戏机会.md"
         self.assertEqual(report.read_text(encoding="utf-8").strip(), result()["report"])
@@ -257,6 +257,13 @@ class DesktopTests(unittest.TestCase):
             while True:
                 tasks = self.desktop.begin("alpha", "claude-code-desktop", max_tasks=3)
                 if not tasks:
+                    stage = self.desktop.status("alpha")["stages"][-1]
+                    done = {t["code"] for t in stage["tasks"] if t["status"] == "completed"}
+                    gate = next((t for t in stage["tasks"] if t["spec"].get("user_confirmation") and t["status"] == "pending" and set(t["spec"]["depends"]) <= done), None)
+                    if gate:
+                        review = self.desktop.review("alpha", gate["id"])
+                        self.desktop.confirm("alpha", gate["id"], review["digest"], "approve", "离线测试夹具：用户明确批准该版本")
+                        continue
                     break
                 store = self.desktop.store
                 specs = {t["id"]: t["spec"] for t in store.tasks(store.latest("alpha")["id"])}

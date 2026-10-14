@@ -73,6 +73,8 @@ def packet(store, project, task, delivery=None):
         "memory": store.meta_file(project, "memory").read_text(encoding="utf-8"),
         "input_folder": str(store.meta_file(project, "input")),
         "task": task["spec"],
+        "delivery_version": {"run": task["run"], "task": task["id"], "revision": task["attempts"] + 1,
+                             "product_version": store.project(project)["product_version"]},
         "skills": role_skills(SKILLS_ROOT, role),
         "retry_context": task.get("error"),
         "dependencies": [digest(store, project, t) for t in dependencies if t["result"]],
@@ -130,15 +132,23 @@ def publish_reports(store, project):
 
 def submit(store, project, task_id, path):
     with store.lock(project):
+        from .versions import check_approvals, ensure_idle
+        ensure_idle(store, project)
+        check_approvals(store, project)
         run = store.latest(project)
         task = next((t for t in store.ready(run["id"]) if t["id"] == task_id), None)
         if task is None:
             raise WorksError("任务不存在、不是待处理状态，或前置任务尚未通过。")
         where = placement(store, project, task)
         result = validate_result(read_json(path), store.workspace(project), task["spec"], where and where["dirs"])
+        from .versions import review_inputs
+        inputs = review_inputs(store, project, run, task)
         store.claim(task)
+        task = next(t for t in store.tasks(run["id"]) if t["id"] == task_id)
         try:
             save_result(store, project, task, result)
+            from .versions import snapshot_delivery
+            snapshot_delivery(store, project, task, result, inputs)
             return store.finish(project, task, result=result)
         except Exception as exc:
             store.finish(project, task, error=str(exc))

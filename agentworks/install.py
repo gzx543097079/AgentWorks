@@ -32,10 +32,11 @@ RULES = """{start}
 - 运行团队先读技能 `agentworks`（Codex `$agentworks`，Claude `/agentworks`）和 `.agentworks/engine/docs/团队运行手册.md`。原生角色名称以 `agentworks-` 开头，位于 `.codex/agents/` 与 `.claude/agents/`。
 - 手册中的 `config/`、`docs/`、`roles/` 在本仓库位于 `.agentworks/engine/` 下；技能位于 `.agents/skills/`（Claude 为 `.claude/skills/`）。
 - 进度接口：在仓库根目录运行 Python，先 `sys.path.insert(0, ".agentworks/engine")`，再 `from agentworks.desktop import Workspace; team = Workspace()`，用法见 `.agentworks/engine/docs/桌面内部接口.md`。本仓库只绑定一个项目，开始前先 `team.status()`。
-- 团队产出都是本项目的文件，按类别放在项目目录并随仓库提交：各阶段报告在 `docs/01-discovery/` 至 `docs/06-growth/`；项目简报、项目记忆和输入资料在 `docs/`；原型 `design/prototype/`、UI 设计稿 `design/ui/`、美术与动画 `design/art/`、音频 `design/audio/`；源代码 `app/`；发布配置 `release/`；商店文案与截图 `store/`；获客素材 `marketing/`；帮助内容 `support/`。`docs/inputs/` 中的真实用户资料默认不提交。
-- `.agentworks/` 只保存工具内部的状态库、任务包和执行凭据。每个阶段验收通过后提醒用户提交项目，或在用户授权下提交。
+- 团队产出都是本项目的文件，按类别放在项目目录并随仓库提交：各阶段报告在 `docs/01-discovery/` 至 `docs/06-growth/`；项目简报、项目记忆和输入资料在 `docs/`；流程原型 `design/wireframe/`、可操作原型 `design/prototype/`、UI 设计稿 `design/ui/`、美术与动画 `design/art/`、音频 `design/audio/`；源代码 `app/`；发布配置 `release/`；商店文案与截图 `store/`；获客素材 `marketing/`；帮助内容 `support/`。`docs/inputs/` 中的真实用户资料默认不提交。
+- `.agentworks/` 保存工具内部的状态库、任务包、执行凭据、用户确认和交付版本快照。每个阶段验收通过后提醒用户提交项目，或在用户授权下提交。
 - 全部角色按20年资深从业者标准工作，这是专业判断框架，不能冒充真实履历。AI 用户评审标记模拟；真实用户反馈、使用数据和收入分开记录并附来源。
 - 工作流依赖和阶段验收不能绕过。分配前 `begin` 登记，完成后用该次 ticket `complete`；可写任务独占批次，独立只读任务可并行。
+- 产品范围、流程原型、UI、可运行构建和发布方案必须由真人确认具体版本；总控通过 review/confirm 保存，不得用角色结果或 QA 代替。修改用 revise 重置上游及下游；产品版本由 set_version 管理。
 - 对外消息、投放、付费和生产发布按用户明确授权执行。
 - `.agentworks/engine/`、`agentworks*` 技能与角色文件由安装程序管理，不手改；升级时从 AgentWorks 源仓库重新安装到本仓库。
 {end}

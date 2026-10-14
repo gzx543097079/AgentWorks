@@ -97,9 +97,11 @@ def load_config():
                 raise WorksError("工作流角色、任务顺序或依赖无效：" + phase)
             if "kinds" in task and (task.get("gate") or not task["kinds"] or not set(task["kinds"]) <= set(KINDS)):
                 raise WorksError("任务适用类型无效，验收任务不能按类型跳过：" + phase)
+            if task.get("user_confirmation") and (not task.get("gate") or not task["depends"]):
+                raise WorksError("用户确认必须是有前置交付的 gate。")
             seen.add(task["id"])
         if not flow["tasks"][-1].get("gate"):
-            raise WorksError("工作流必须以独立验收任务结束：" + phase)
+            raise WorksError("工作流必须以验收或用户确认任务结束：" + phase)
         if flow["requires"] is not None and flow["requires"] not in flows:
             raise WorksError("前置阶段不存在。")
     return team, flows
@@ -118,7 +120,7 @@ class Store:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS projects (
                   id TEXT PRIMARY KEY, title TEXT NOT NULL, kind TEXT NOT NULL,
-                  market TEXT NOT NULL, created TEXT NOT NULL);
+                  market TEXT NOT NULL, created TEXT NOT NULL, product_version TEXT NOT NULL DEFAULT '0.1.0');
                 CREATE TABLE IF NOT EXISTS runs (
                   id INTEGER PRIMARY KEY AUTOINCREMENT, project TEXT NOT NULL,
                   phase TEXT NOT NULL, config TEXT NOT NULL, prerequisite INTEGER,
@@ -127,12 +129,15 @@ class Store:
                 CREATE TABLE IF NOT EXISTS tasks (
                   id INTEGER PRIMARY KEY AUTOINCREMENT, run INTEGER NOT NULL,
                   code TEXT NOT NULL, spec TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending',
-                  attempts INTEGER NOT NULL DEFAULT 0, result TEXT, error TEXT,
+                  attempts INTEGER NOT NULL DEFAULT 0, result TEXT, error TEXT, review TEXT, snapshot TEXT, retry_count INTEGER NOT NULL DEFAULT 0,
                   UNIQUE(run, code), FOREIGN KEY(run) REFERENCES runs(id));
                 CREATE TABLE IF NOT EXISTS events (
                   id INTEGER PRIMARY KEY AUTOINCREMENT, project TEXT NOT NULL,
                   at TEXT NOT NULL, kind TEXT NOT NULL, detail TEXT NOT NULL);
             """)
+            columns = {r["name"] for r in db.execute("PRAGMA table_info(projects)")}
+            if "product_version" not in columns:
+                raise WorksError("当前版本不迁移旧项目数据；请保留原目录并指定新的 data_dir。")
 
     @contextlib.contextmanager
     def db(self):
@@ -229,7 +234,7 @@ class Store:
                     "\n\n## 已选择的方向\n待研究后记录。\n\n## 授权范围\n研究、设计和本地开发；对外操作按用户后续明确授权。\n", encoding="utf-8")
                 (workspace / names["memory"]).write_text("# 项目长期记忆\n\n只记录已确认的偏好、决策及理由，并注明日期和来源。\n", encoding="utf-8")
                 (workspace / names["input"] / "README.md").write_text("# 输入资料\n\n放入真实用户反馈、竞品资料或经营数据，并附来源、日期和字段说明。AI模拟结果不得标作真实数据。\n", encoding="utf-8")
-                db.execute("INSERT INTO projects VALUES(?,?,?,?,?)", (project, title, kind, market, now()))
+                db.execute("INSERT INTO projects(id,title,kind,market,created) VALUES(?,?,?,?,?)", (project, title, kind, market, now()))
                 self.event(db, project, "created", title)
         return self.project(project)
 
@@ -249,9 +254,11 @@ class Store:
             return [dict(r) for r in db.execute("SELECT * FROM runs WHERE project=? ORDER BY id", (project,))]
 
     def latest(self, project, phase=None):
-        runs = [r for r in self.runs(project) if not r["abandoned"] and (phase is None or r["phase"] == phase)]
+        runs = [r for r in self.runs(project) if (not r["abandoned"] if phase is None else r["phase"] == phase)]
         if not runs:
             raise WorksError("尚无对应工作流，请先 plan。")
+        if runs[-1]["abandoned"]:
+            raise WorksError("对应阶段已失效或终止，请重新 plan：" + str(phase))
         return runs[-1]
 
     def tasks(self, run):
@@ -269,17 +276,23 @@ class Store:
         if run["abandoned"]:
             return "abandoned"
         statuses = {t["status"] for t in self.tasks(run["id"])}
-        for status in ("running", "failed", "blocked", "needs_revision", "pending"):
+        for status in ("running", "failed", "blocked", "needs_revision", "awaiting_user_confirmation", "pending"):
             if status in statuses:
                 return status
         return "completed"
 
     def plan(self, project, phase):
+        from .versions import check_approvals
         self.project(project)
         team, flows = load_config()
         if phase not in flows:
             raise WorksError("未知工作流：" + phase)
         with self.lock(project):
+            replacing = {phase}
+            for candidate, flow in flows.items():
+                if flow["requires"] in replacing:
+                    replacing.add(candidate)
+            check_approvals(self, project, replacing)
             active = [r for r in self.runs(project) if not r["abandoned"] and self.run_status(r) != "completed"]
             if active:
                 if len(active) == 1 and active[0]["phase"] == phase:
@@ -291,6 +304,9 @@ class Store:
                 previous = self.latest(project, required)
                 if self.run_status(previous) != "completed":
                     raise WorksError("前置阶段未通过：" + required)
+                for confirmation in self.tasks(previous["id"]):
+                    if confirmation["spec"].get("user_confirmation") and json.loads(confirmation["review"] or "{}").get("product_version") != self.project(project)["product_version"]:
+                        raise WorksError("前置批准属于其他产品版本，请重新执行并确认：" + required)
                 lineage = previous
                 by_id = {r["id"]: r for r in self.runs(project)}
                 while lineage["prerequisite"] is not None:
@@ -306,8 +322,11 @@ class Store:
             kept = {t["id"] for t in flow["tasks"]}
             for t in flow["tasks"]:
                 t["depends"] = [d for d in t["depends"] if d in kept]
-            snapshot = {"team": team, "flow": flow}
+            snapshot = {"team": team, "flow": flow, "product_version": self.project(project)["product_version"]}
             with self.db() as db:
+                from .versions import supersede_runs
+                roots = {r["id"] for r in self.runs(project) if r["phase"] == phase}
+                supersede_runs(self, project, roots, db, "开启 " + phase + " 新一轮", include_roots=True)
                 run = db.execute("INSERT INTO runs(project,phase,config,prerequisite,created) VALUES(?,?,?,?,?)",
                                  (project, phase, json.dumps(snapshot, ensure_ascii=False), prerequisite, now())).lastrowid
                 for task in flow["tasks"]:
@@ -316,17 +335,25 @@ class Store:
         return self.latest(project)
 
     def ready(self, run):
+        with self.db() as db:
+            row = db.execute("SELECT abandoned FROM runs WHERE id=?", (run,)).fetchone()
+        if row is None or row["abandoned"]:
+            return []
         tasks = self.tasks(run)
         done = {t["code"] for t in tasks if t["status"] == "completed"}
-        return [t for t in tasks if t["status"] == "pending" and set(t["spec"]["depends"]) <= done]
+        return [t for t in tasks if t["status"] == "pending" and not t["spec"].get("user_confirmation") and set(t["spec"]["depends"]) <= done]
 
     def claim(self, task):
+        if task["spec"].get("user_confirmation"):
+            raise WorksError("用户确认只能通过 review/confirm 保存，不能委派或提交 AI 结果。")
         with self.db() as db:
-            changed = db.execute("UPDATE tasks SET status='running', attempts=attempts+1, error=NULL WHERE id=? AND status='pending' AND attempts<3", (task["id"],)).rowcount
+            changed = db.execute("UPDATE tasks SET status='running', attempts=attempts+1, error=NULL WHERE id=? AND status='pending' AND run IN (SELECT id FROM runs WHERE abandoned=0)", (task["id"],)).rowcount
         if not changed:
-            raise WorksError("任务已被处理或达到3次尝试上限。")
+            raise WorksError("任务已被处理。")
 
     def finish(self, project, task, result=None, error=None):
+        if task["spec"].get("user_confirmation"):
+            raise WorksError("用户确认不能由任务结果代替。")
         status = "failed" if error else "completed"
         if result:
             if result["status"] == "blocked" or result["verdict"] == "blocked":
@@ -349,10 +376,12 @@ class Store:
             task = next((t for t in self.tasks(run["id"]) if t["id"] == task_id), None)
             if not task or task["status"] not in ("failed", "blocked", "needs_revision"):
                 raise WorksError("只允许重试当前阶段失败、阻塞或待修改的任务。")
-            if task["attempts"] >= 3:
+            if task["spec"].get("user_confirmation"):
+                raise WorksError("用户要求修改时请 revise 上游产出任务，不能 retry 确认关卡。")
+            if task["retry_count"] >= 2:
                 raise WorksError("已达到3次尝试上限，请评估原因并明确开启新一轮流程。")
             with self.db() as db:
-                db.execute("UPDATE tasks SET status='pending',error=?,result=NULL WHERE id=?", ("重试说明：" + reason, task_id))
+                db.execute("UPDATE tasks SET status='pending',error=?,result=NULL,retry_count=retry_count+1 WHERE id=?", ("重试说明：" + reason, task_id))
                 self.event(db, project, "retry", str(task_id) + ": " + reason)
 
     def recover(self, project):

@@ -13,7 +13,7 @@ def restore(store, archive):
         if sum(i.file_size for i in z.infolist()) > 1024 * 1024 * 1024:
             raise WorksError("备份解压后超过1GB，请手动检查后迁移。")
         snapshot = json.loads(z.read("snapshot.json"))
-        if snapshot.get("format") != 1:
+        if snapshot.get("format") != 2:
             raise WorksError("不支持的备份格式。")
         project = snapshot["project"]
         name = slug(project["id"])
@@ -44,7 +44,7 @@ def restore(store, archive):
                     # Embedded briefs live in the product repository and come back with its Git history.
                     if not store.product_root and not (staged / "workspace/BRIEF.md").is_file():
                         raise WorksError("备份缺少项目简报。")
-                    db.execute("INSERT INTO projects VALUES(?,?,?,?,?)", tuple(project[k] for k in ("id", "title", "kind", "market", "created")))
+                    db.execute("INSERT INTO projects(id,title,kind,market,created,product_version) VALUES(?,?,?,?,?,?)", tuple(project[k] for k in ("id", "title", "kind", "market", "created", "product_version")))
                     for entry in snapshot["runs"]:
                         run = entry["run"]
                         if run["project"] != name:
@@ -55,10 +55,10 @@ def restore(store, archive):
                             if task["run"] != run["id"]:
                                 raise WorksError("任务所属阶段无效。")
                             status = "failed" if task["status"] == "running" else task["status"]
-                            db.execute("INSERT INTO tasks(id,run,code,spec,status,attempts,result,error) VALUES(?,?,?,?,?,?,?,?)",
+                            db.execute("INSERT INTO tasks(id,run,code,spec,status,attempts,result,error,review,snapshot,retry_count) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                                        (task["id"], task["run"], task["code"], json.dumps(task["spec"], ensure_ascii=False), status,
                                         task["attempts"], json.dumps(task["result"], ensure_ascii=False) if task["result"] else None,
-                                        "恢复前执行中断，请检查后重试。" if task["status"] == "running" else task["error"]))
+                                        "恢复前执行中断，请检查后重试。" if task["status"] == "running" else task["error"], task["review"], task["snapshot"], task["retry_count"]))
                     for event in snapshot["events"]:
                         db.execute("INSERT INTO events(project,at,kind,detail) VALUES(?,?,?,?)",
                                    (name, event["at"], event["kind"], event["detail"]))
@@ -81,7 +81,7 @@ def export_project(store, project, output):
     if destination.exists():
         raise WorksError("目标文件已存在，拒绝覆盖。")
     with store.lock(project):
-        snapshot = {"format": 1, "project": store.project(project), "runs": [], "events": store.history(project)}
+        snapshot = {"format": 2, "project": store.project(project), "runs": [], "events": store.history(project)}
         for run in store.runs(project):
             if any(task["status"] == "running" for task in store.tasks(run["id"])):
                 raise WorksError("请先结束桌面 Agent 任务再备份，避免备份正在改写的交付。")

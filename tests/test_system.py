@@ -10,6 +10,7 @@ from pathlib import Path
 from agentworks.backup import restore, export_project
 from agentworks.core import Store, WorksError, load_config, validate_result, write_json
 from agentworks.handoff import packet, submit
+from agentworks.desktop import Workspace
 
 
 def result(verdict="not_applicable", status="completed"):
@@ -39,10 +40,24 @@ class SystemTests(unittest.TestCase):
         write_json(path, value)
         return submit(self.store, "alpha", task["id"], path)
 
+    def confirm_ready(self, run):
+        tasks = self.store.tasks(run["id"])
+        done = {t["code"] for t in tasks if t["status"] == "completed"}
+        for task in tasks:
+            if task["spec"].get("user_confirmation") and task["status"] == "pending" and set(task["spec"]["depends"]) <= done:
+                desktop = Workspace(self.store.home)
+                review = desktop.review("alpha", task["id"])
+                desktop.confirm("alpha", task["id"], review["digest"], "approve", "离线测试夹具：明确批准此交付版本")
+                return True
+        return False
+
     def finish_phase(self, phase):
         run = self.store.plan("alpha", phase)
-        while self.store.ready(run["id"]):
-            for task in self.store.ready(run["id"]):
+        while True:
+            ready = self.store.ready(run["id"])
+            if not ready and not self.confirm_ready(run):
+                break
+            for task in ready:
                 self.complete(task)
         return run
 
@@ -142,7 +157,11 @@ class SystemTests(unittest.TestCase):
         self.finish_phase("product")
         run = self.store.plan("alpha", "design")
         while not any(t["code"] == "expert" for t in self.store.ready(run["id"])):
-            self.complete(self.store.ready(run["id"])[0])
+            ready = self.store.ready(run["id"])
+            if ready:
+                self.complete(ready[0])
+            else:
+                self.assertTrue(self.confirm_ready(run))
         tasks = {t["code"]: t for t in self.store.ready(run["id"])}
         marker = result()
         marker["report"] = "PRIVATE_PEER_OPINION"

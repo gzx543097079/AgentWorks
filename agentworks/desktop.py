@@ -40,17 +40,24 @@ class Workspace:
             with self.store.db() as db:
                 return [dict(row) for row in db.execute("SELECT * FROM projects ORDER BY created")]
         stages = []
+        runs = self.store.runs(project)
+        active = [r for r in runs if not r["abandoned"]]
+        current_stage = active[-1]["id"] if active else None
         for run in self.store.runs(project):
             tasks = self.store.tasks(run["id"])
             for task in tasks:
                 path = receipt_path(self.store, project, run["id"], task["id"], task["attempts"])
                 if task["status"] == "running" and path.is_file():
                     task["execution"] = read_json(path)
-            stages.append({"id": run["id"], "phase": run["phase"], "status": self.store.run_status(run),
+            done = {t["code"] for t in tasks if t["status"] == "completed"}
+            confirmations = [t["id"] for t in tasks if t["spec"].get("user_confirmation")
+                             and t["status"] in ("pending", "awaiting_user_confirmation")
+                             and set(t["spec"]["depends"]) <= done]
+            stages.append({"confirmations": [] if run["abandoned"] else confirmations, "id": run["id"], "phase": run["phase"], "status": self.store.run_status(run),
                            "ready": [] if run["abandoned"] else [t["id"] for t in self.store.ready(run["id"])],
                            "tasks": tasks})
         return {"project": self.store.project(project), "workspace": str(self.store.workspace(project)),
-                "data_dir": str(self.store.home), "stages": stages}
+                "data_dir": str(self.store.home), "current_stage": current_stage, "stages": stages}
 
     def create(self, project, title, kind="compare", market="待选择", brief=""):
         self.store.create(project, title, kind, market, brief)
@@ -79,6 +86,8 @@ class Workspace:
             runs = self.store.runs(project)
             if any(t["status"] == "running" for r in runs for t in self.store.tasks(r["id"])):
                 raise WorksError("该项目已有桌面任务执行中，请收齐交付；若已中断，先确认子 Agent 停止，再恢复状态。")
+            from .versions import check_approvals
+            check_approvals(self.store, project)
             run = self.store.latest(project)
             ready = self.store.ready(run["id"])
             if not ready:
@@ -89,6 +98,8 @@ class Workspace:
             # Materialize inputs before claiming, preserving retry context.
             deliveries = {t["id"]: attempt_path(self.store, project, run["id"], t["id"], t["attempts"] + 1, "delivery.json")
                           for t in batch}
+            from .versions import review_inputs
+            inputs = {t["id"]: review_inputs(self.store, project, run, t) for t in batch}
             prompts = {t["id"]: packet(self.store, project, t, deliveries[t["id"]]) for t in batch}
             for task in batch:
                 where = placement(self.store, project, task)
@@ -102,7 +113,7 @@ class Workspace:
                     attempt = task["attempts"] + 1
                     ticket = {"task": task["id"], "run": run["id"], "attempt": attempt,
                               "token": secrets.token_hex(16)}
-                    receipt = {"ticket": ticket, "host": host, "started": now()}
+                    receipt = {"ticket": ticket, "host": host, "started": now(), "inputs": inputs[task["id"]]}
                     path = receipt_path(self.store, project, run["id"], task["id"], attempt)
                     write_json(path, receipt)
                     prompt_file = attempt_path(self.store, project, run["id"], task["id"], attempt, "prompt.txt")
@@ -148,14 +159,36 @@ class Workspace:
                     raise WorksError("交付文件不是合法 JSON：" + str(exc)) from exc
             where = placement(self.store, project, task)
             result = validate_result(result, self.store.workspace(project), task["spec"], where and where["dirs"])
-            write_json(attempt_path(self.store, project, task["run"], task["id"], task["attempts"], "result.json"), result)
+            from .versions import snapshot_delivery, validate_inputs
+            receipt = read_json(receipt_path(self.store, project, task["run"], task["id"], task["attempts"]))
+            validate_inputs(self.store, project, receipt["inputs"], task)
             save_result(self.store, project, task, result)
+            snapshot_delivery(self.store, project, task, result, receipt["inputs"])
+            write_json(attempt_path(self.store, project, task["run"], task["id"], task["attempts"], "result.json"), result)
             # The validated attempt result replaces the worker's draft.
+            status = self.store.finish(project, task, result=result)
             if delivery.is_file():
                 delivery.unlink()
-            status = self.store.finish(project, task, result=result)
             publish_reports(self.store, project)
             return status
+
+    def review(self, project, task):
+        from .versions import review
+        return review(self.store, project, task)
+
+    def confirm(self, project, task, digest, decision, feedback):
+        from .versions import confirm
+        return confirm(self.store, project, task, digest, decision, feedback)
+
+    def revise(self, project, task, reason):
+        from .versions import revise
+        revise(self.store, project, task, reason)
+        return self.status(project)
+
+    def set_version(self, project, product_version):
+        from .versions import set_version
+        set_version(self.store, project, product_version)
+        return self.status(project)
 
     def fail(self, project, ticket, reason):
         if not isinstance(reason, str) or not reason.strip():

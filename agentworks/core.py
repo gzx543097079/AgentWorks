@@ -10,6 +10,10 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# An installed copy lives at <product>/.agentworks/engine and marks itself with install.json.
+EMBEDDED = (ROOT / "install.json").is_file()
+PRODUCT_ROOT = ROOT.parents[1] if EMBEDDED else None
+SKILLS_ROOT = PRODUCT_ROOT or ROOT
 
 
 class WorksError(Exception):
@@ -57,7 +61,7 @@ def load_config():
         if role["experience_years"] != 20 or role["mode"] not in ("read-only", "workspace-write"):
             raise WorksError("角色经验或权限配置无效。")
         try:
-            if not role_skills(ROOT, role):
+            if not role_skills(SKILLS_ROOT, role):
                 raise ValueError("当前团队的角色必须绑定技能：" + role["id"])
         except ValueError as exc:
             raise WorksError(str(exc)) from exc
@@ -75,8 +79,12 @@ def load_config():
 
 
 class Store:
-    def __init__(self, data_dir=None):
+    def __init__(self, data_dir=None, product_root=None):
+        if data_dir is None and product_root is None and EMBEDDED:
+            data_dir, product_root = ROOT.parent, PRODUCT_ROOT
         self.home = Path(data_dir or ROOT / ".agentworks").resolve()
+        # Embedded mode: the host repository is the single product workspace.
+        self.product_root = Path(product_root).resolve() if product_root else None
         self.home.mkdir(parents=True, exist_ok=True)
         self.dbpath = self.home / "state.sqlite3"
         with self.db() as db:
@@ -123,7 +131,12 @@ class Store:
 
     def workspace(self, project):
         self.project(project)
-        return self.home / "projects" / project / "workspace"
+        return self.product_root or self.home / "projects" / project / "workspace"
+
+    def meta(self, project):
+        """Folder holding BRIEF.md, MEMORY.md and input/."""
+        self.project(project)
+        return self.home / "projects" / project if self.product_root else self.workspace(project)
 
     @contextlib.contextmanager
     def lock(self, project):
@@ -159,12 +172,23 @@ class Store:
             with self.db() as db:
                 if db.execute("SELECT 1 FROM projects WHERE id=?", (project,)).fetchone():
                     raise WorksError("项目已存在；请读取已保存的进度继续。")
-                workspace = self.home / "projects" / project / "workspace"
-                if workspace.exists():
-                    raise WorksError("已有同名工作区，请保留内容后使用不同项目编号。")
-                workspace.mkdir(parents=True)
-                # Keep product files inside their own Git workspace boundary.
-                subprocess.run(["git", "init", "--quiet", str(workspace)], check=True, capture_output=True)
+                if self.product_root:
+                    existing = db.execute("SELECT id FROM projects LIMIT 1").fetchone()
+                    if existing:
+                        raise WorksError("本仓库已绑定项目 " + existing["id"] + "；一个产品仓库只对应一个项目。")
+                    workspace = self.home / "projects" / project
+                    if workspace.exists():
+                        raise WorksError("已有同名项目资料，请保留内容后使用不同项目编号。")
+                    workspace.mkdir(parents=True)
+                    if not (self.product_root / ".git").exists():
+                        subprocess.run(["git", "init", "--quiet", str(self.product_root)], check=True, capture_output=True)
+                else:
+                    workspace = self.home / "projects" / project / "workspace"
+                    if workspace.exists():
+                        raise WorksError("已有同名工作区，请保留内容后使用不同项目编号。")
+                    workspace.mkdir(parents=True)
+                    # Keep product files inside their own Git workspace boundary.
+                    subprocess.run(["git", "init", "--quiet", str(workspace)], check=True, capture_output=True)
                 (workspace / "input").mkdir()
                 (workspace / "BRIEF.md").write_text(
                     "# " + title + "\n\n项目类型：" + kind + "\n目标市场：" + market +

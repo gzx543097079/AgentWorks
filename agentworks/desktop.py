@@ -2,7 +2,7 @@
 import secrets
 
 from .backup import export_project, restore
-from .core import Store, WorksError, load_config, now, read_json, validate_result, write_json
+from .core import EMBEDDED, PRODUCT_ROOT, Store, WorksError, load_config, now, read_json, validate_result, write_json
 from .handoff import packet, role_for, run_dir, save_result
 
 HOSTS = ("codex-desktop", "claude-code-desktop")
@@ -15,14 +15,19 @@ def receipt_path(store, project, run, task, attempt):
 class Workspace:
     """The parent desktop agent coordinates; child agents receive only task prompts."""
 
-    def __init__(self, data_dir=None):
-        self.store = Store(data_dir)
+    def __init__(self, data_dir=None, product_root=None):
+        self.store = Store(data_dir, product_root)
 
     def check(self):
-        from scripts.sync_agents import synchronize
         team, flows = load_config()
-        return {"roles": len(team["roles"]), "workflows": len(flows),
-                "configuration_drift": synchronize(check=True), "data_dir": str(self.store.home)}
+        if EMBEDDED:
+            from .install import verify
+            drift = verify(PRODUCT_ROOT)
+        else:
+            from scripts.sync_agents import synchronize
+            drift = synchronize(check=True)
+        return {"roles": len(team["roles"]), "workflows": len(flows), "embedded": EMBEDDED,
+                "configuration_drift": drift, "data_dir": str(self.store.home)}
 
     def status(self, project=None):
         if project is None:
@@ -139,7 +144,7 @@ class Workspace:
         if not isinstance(text, str) or not text.strip():
             raise WorksError("项目记忆不能为空。")
         with self.store.lock(project):
-            with (self.store.workspace(project) / "MEMORY.md").open("a", encoding="utf-8") as out:
+            with (self.store.meta(project) / "MEMORY.md").open("a", encoding="utf-8") as out:
                 out.write("\n- " + now() + " " + text + "\n")
             with self.store.db() as db:
                 self.store.event(db, project, "note", text)

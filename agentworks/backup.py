@@ -41,7 +41,8 @@ def restore(store, archive):
                             target.parent.mkdir(parents=True, exist_ok=True)
                             with z.open(item) as source, target.open("wb") as out:
                                 shutil.copyfileobj(source, out)
-                    if not (staged / "workspace/BRIEF.md").is_file():
+                    brief = staged / ("BRIEF.md" if store.product_root else "workspace/BRIEF.md")
+                    if not brief.is_file():
                         raise WorksError("备份缺少项目简报。")
                     db.execute("INSERT INTO projects VALUES(?,?,?,?,?)", tuple(project[k] for k in ("id", "title", "kind", "market", "created")))
                     for entry in snapshot["runs"]:
@@ -63,8 +64,10 @@ def restore(store, archive):
                                    (name, event["at"], event["kind"], event["detail"]))
                     store.event(db, name, "restored", "从本地备份恢复")
                     # Product files have a separate Git boundary on each machine.
-                    import subprocess
-                    subprocess.run(["git", "init", "--quiet", str(staged / "workspace")], check=True, capture_output=True)
+                    # Embedded product code is restored from the host repository's own Git.
+                    if not store.product_root:
+                        import subprocess
+                        subprocess.run(["git", "init", "--quiet", str(staged / "workspace")], check=True, capture_output=True)
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.move(str(staged), str(destination))
     return name

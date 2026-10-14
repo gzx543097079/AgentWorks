@@ -152,12 +152,12 @@ class Store:
         with self.lock(project):
             with self.db() as db:
                 if db.execute("SELECT 1 FROM projects WHERE id=?", (project,)).fetchone():
-                    raise WorksError("项目已存在；使用 status 或 continue 继续。")
+                    raise WorksError("项目已存在；请读取已保存的进度继续。")
                 workspace = self.home / "projects" / project / "workspace"
                 if workspace.exists():
                     raise WorksError("已有同名工作区，请保留内容后使用不同项目编号。")
                 workspace.mkdir(parents=True)
-                # An independent Git root keeps Codex's workspace boundary at this product.
+                # Keep product files inside their own Git workspace boundary.
                 subprocess.run(["git", "init", "--quiet", str(workspace)], check=True, capture_output=True)
                 (workspace / "input").mkdir()
                 (workspace / "BRIEF.md").write_text(
@@ -290,6 +290,8 @@ class Store:
             raise WorksError("请提供终止原因。")
         with self.lock(project):
             run = self.latest(project)
+            if any(t["status"] == "running" for t in self.tasks(run["id"])):
+                raise WorksError("仍有任务执行中；先停止并恢复中断状态，再终止本阶段。")
             with self.db() as db:
                 db.execute("UPDATE runs SET abandoned=1 WHERE id=?", (run["id"],))
                 self.event(db, project, "abandoned", str(run["id"]) + ": " + reason)

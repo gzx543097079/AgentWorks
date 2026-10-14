@@ -1,9 +1,9 @@
 @AGENTS.md
 
-## Claude Code 入口
+## Claude 桌面端 Code 模式
 
-使用上面导入的通用规则，不维护另一套团队流程。
-本仓库技能为 `/agentworks`，固定子 Agent 在 `.claude/agents/agentworks-*.md`。
-优先使用当前会话的原生子 Agent 和工具，通过任务包及结构化交付保存进度。
-不要为了使用团队在 Claude Code 内再嵌套启动 Claude CLI；外部运行器是从终端独立启动的可选方式。
-如果技能或固定角色未加载，直接读 `docs/团队运行手册.md` 和需要的 `roles/*.md`。
+在 Claude 桌面端选择 Code 模式及本地仓库，使用上面导入的共用规则。
+本仓库技能为 `/agentworks`，原生子 Agent 在 `.claude/agents/agentworks-*.md`。
+使用当前桌面会话的子 Agent、浏览器、文件和代码工具完成任务；不要另行启动模型命令行。
+项目状态由 `agentworks.desktop.Workspace` 保存，调用说明在 `docs/桌面内部接口.md`；用户无需操作终端。
+如果技能或固定角色未加载，读取 `docs/团队运行手册.md`，给当前平台的通用子 Agent 传入完整任务包。

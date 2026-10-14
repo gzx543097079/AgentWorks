@@ -1,4 +1,4 @@
-"""Restore a project export into an empty data store without overwriting projects."""
+"""Export project data and restore it into an empty store without overwriting work."""
 import json
 import shutil
 import tempfile
@@ -68,3 +68,30 @@ def restore(store, archive):
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.move(str(staged), str(destination))
     return name
+
+
+def export_project(store, project, output):
+    destination = Path(output).expanduser().resolve()
+    source = store.home / "projects" / project
+    if destination == source or source in destination.parents:
+        raise WorksError("备份文件应放在项目工作区外。")
+    if destination.exists():
+        raise WorksError("目标文件已存在，拒绝覆盖。")
+    with store.lock(project):
+        snapshot = {"format": 1, "project": store.project(project), "runs": [], "events": store.history(project)}
+        for run in store.runs(project):
+            if any(task["status"] == "running" for task in store.tasks(run["id"])):
+                raise WorksError("请先结束桌面 Agent 任务再备份，避免备份正在改写的交付。")
+            snapshot["runs"].append({"run": run, "tasks": store.tasks(run["id"])})
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as temp:
+            archive = Path(temp) / "backup.zip"
+            with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:
+                z.writestr("snapshot.json", json.dumps(snapshot, ensure_ascii=False, indent=2))
+                for path in source.rglob("*"):
+                    if path.is_symlink():
+                        continue
+                    if path.is_file() and ".git" not in path.relative_to(source).parts and not path.name.endswith("-process.json"):
+                        z.write(path, "files/" + str(path.relative_to(source)))
+            shutil.copyfile(archive, destination)
+    return str(destination)

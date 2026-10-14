@@ -1,35 +1,33 @@
 # AgentWorks
 
-**供 Codex 和 Claude Code 共用的海外产品多 Agent 团队。** 从游戏与工具机会研究，到产品定义、UI原型、独立评审、开发验收和运营迭代，保存每一步的交付与进度。
+**在 Codex 桌面端和 Claude 桌面端 Code 模式中，通过聊天协作的海外产品团队。**
 
-15 个固定角色，全部采用 **20 年资深从业者标准**。这是专业能力框架，不是真实履历；AI 用户评审明确标注模拟，真实用户与经营数据单独记录。
+15 个固定角色、6 个阶段，从游戏与工具选题到产品、设计、独立评审、开发验收和运营迭代。所有角色采用20年资深从业者标准，这是专业判断框架，不是真实履历；AI用户评审明确标注模拟。
 
 ## 直接开始
 
-在 Codex 或 Claude Code 中打开同一份仓库根目录，告诉它：
+在 Codex 桌面端打开 AgentWorks 本地项目，或在 Claude 桌面端的 Code 模式选择同一份本地文件夹，然后说：
 
-> 使用 AgentWorks 查看当前项目，并从已保存的进度继续。
+> 使用 AgentWorks 查看当前项目，从已保存进度继续。
 
-或新建项目：
+新项目可以说：
 
-> 使用 AgentWorks 新建一个海外产品项目，同时比较游戏和工具，按盈利证据挑选方向。
+> 使用 AgentWorks 新建海外产品项目，先比较游戏和工具，再按盈利证据选择方向。
 
-两个平台都可以使用这两句话，不必记技能命令。切换平台时继续已有项目即可。
+你只需要聊天。团队使用当前桌面端的原生子 Agent 和工具，自动保存项目状态；不需要独立模型命令行、终端启动步骤或额外模型登录。
 
-平台入口和迁移见 [Codex / Claude Code 使用说明](docs/跨环境使用.md)。详细操作见 [使用指南](docs/使用指南.md)，角色与交接标准见 [协作约定](docs/协作约定.md)。
+[桌面使用指南](docs/使用指南.md) · [两桌面端共用说明](docs/跨环境使用.md) · [验收记录](docs/验收记录.md)
 
-## 一份配置，两个平台
+## 一份团队配置，两个桌面入口
 
-角色只维护 `config/team.json`，工作流只维护 `config/workflows.json`。两套原生角色文件是同步脚本生成的适配结果，你不需要分别修改。
-
-| 内容 | Codex | Claude Code |
+| 内容 | Codex 桌面端 | Claude 桌面端 Code 模式 |
 |---|---|---|
-| 共用团队规则 | 读取 `AGENTS.md` | `CLAUDE.md` 导入同一份 `AGENTS.md` |
+| 共用规则 | `AGENTS.md` | `CLAUDE.md` 导入同一规则 |
 | 自动生成的原生角色 | `.codex/agents/*.toml` | `.claude/agents/agentworks-*.md` |
 | 启动方式 | 自然语言；可选 `$agentworks` | 自然语言；可选 `/agentworks` |
-| 项目记忆与进度 | 同一份 `.agentworks/` | 同一份 `.agentworks/` |
+| 项目进度 | 同一份 `.agentworks/` | 同一份 `.agentworks/` |
 
-在一边修改角色源后，运行 `python3 scripts/sync_agents.py` 就会同步两边。当前兼容维护范围为 Codex 和 Claude Code。
+角色只维护 `config/team.json`，流程只维护 `config/workflows.json`。两个平台的原生角色与技能自动同步，无需分别维护。
 
 ## 固定团队
 
@@ -51,7 +49,7 @@
 | 海外新用户体验评审 | 用资深研究方法模拟首次使用 |
 | 海外付费价值评审 | 价格理解、信任和价值的模拟评审 |
 
-角色唯一来源：`config/team.json`。同步生成 `roles/` 通用角色卡、`.codex/agents/` 和 `.claude/agents/`。两平台共用 [团队运行手册](docs/团队运行手册.md)、工作流和项目记忆。
+角色唯一来源：`config/team.json`。同步生成 `roles/` 通用角色卡、`.codex/agents/` 和 `.claude/agents/`。两桌面端共用 [团队运行手册](docs/团队运行手册.md)、工作流和项目记忆。
 
 ## 协作流程
 
@@ -70,77 +68,18 @@ flowchart LR
 
 六个工作流：`discovery → product → design → build → launch → growth`。运营从研究阶段就参与，阶段末有独立验收。结果待修改或阻塞时保留历史，补充输入后继续。
 
-## 两种使用方式
+## 进度和交付长期保存
 
-**当前环境对话内协作（推荐）**：总控读取项目状态，为专业子 agent 导出任务包，汇总并保存结果。可利用当前会话已经连接的浏览器、图片、设计或开发工具。无需另装模型 CLI；没有子 Agent 时明确使用顺序角色模式。
+角色、流程、程序和说明进入 Git；每个产品的简报、记忆、任务状态、原型、代码和报告保存到 `.agentworks/`。
 
-**本机运行器**：通过选定的 Codex 或 Claude CLI 启动独立角色进程，自动处理依赖、结构化交付、阶段状态、有限重试和日志。独立只读任务可以并行，可写任务独占执行。
+切换桌面端前先收齐当前批次交付，再打开同一份本地文件夹继续。原生子 Agent 开始前会登记任务，执行中不会被另一会话重复领取；中断后可以检查已有产物并恢复。工作树或另一台电脑需要明确连接或恢复原数据目录。
 
-本地要求：macOS/Linux、Python 3.9+、Git；自动执行需要所选 CLI 及有效登录。运行器无额外 Python 包依赖。
+项目数据默认不进入 Git。你可以直接说“把这个项目备份到我指定的位置”，由 Agent 保存备份；恢复使用空目录，保留现有数据。
 
-```bash
-python3 -m agentworks doctor
-python3 -m agentworks create my-product --title "海外产品选题" --kind compare
-python3 -m agentworks plan my-product discovery
-python3 -m agentworks run my-product
-```
+## 桌面内部支持
 
-最后一条预览就绪任务。实际调用模型：
+`agentworks.desktop.Workspace` 只管理本地项目状态、交付校验、重试和备份，不调用模型。由桌面 Agent 使用自己的代码工具调用，用户无需操作。内部模块使用 Python 标准库，当前支持 macOS/Linux，依赖 Python 3.9+ 和 Git。
 
-```bash
-python3 -m agentworks run my-product --execute --backend codex --max-tasks 2
-python3 -m agentworks status my-product
-python3 -m agentworks continue my-product --execute --backend claude --max-tasks 3
-```
+模型、并发能力、浏览器、图像和外部服务使用当前桌面应用的设置与已连接工具。缺少必需能力时明确报告。当前没有常驻服务；不会在关闭应用后自行另启模型进程。真实发布、对外消息或投放仍按用户明确授权执行。
 
-上例展示切换后端；也可一直使用同一平台。省略 `--backend` 时仅在恰好一个 CLI 可用时自动选择。执行会使用所选账号的模型额度。调用数、并发、超时和重试有上限；没有精确的金额限额功能。
-
-两个后台的工具能力不同：Claude 后台目前支持文件与研究任务，构建、运行测试及渲染验收需通过有工具的宿主会话接续。完整能力对照见 [跨环境使用](docs/跨环境使用.md)。
-
-## 持久保存与恢复
-
-- Git 保存角色、流程、程序和文档，能回退版本并跨项目复用。
-- `.agentworks/state.sqlite3` 保存各项目的任务、事件和配置快照。
-- `.agentworks/projects/` 保存简报、项目记忆、输入资料、原型、代码和运行报告。
-- `export` / `restore` 备份并恢复项目，目标必须为空，避免覆盖现有工作。
-- `.agentworks/` 默认不进入 Git；产品数据需要单独备份。
-
-```bash
-python3 -m agentworks note my-product "记录用户确认的目标、约束与决定"
-python3 -m agentworks export my-product /备份目录/my-product.zip
-python3 -m agentworks --data-dir /新数据目录 restore /备份目录/my-product.zip
-```
-
-## 当前能力边界
-
-这是可运行的**本地版本**。配置与进度跨聊天保存，已完成任务可以交接与续作；未安装云端或开机常驻服务，关机后本机不会继续工作。
-
-图像生成、浏览器、游戏引擎、商业数据和运营账号按产品需要连接；未连接的工具不会凭空可用。launch 交付上线准备，实际外部发布需要已授权的工具与环境。growth 使用真实数据；缺数据会明确阻塞。
-
-角色配置不能保证模型实际具备人类20年的经验，团队结果仍需证据和验收。
-
-## 验证与维护
-
-```bash
-python3 scripts/sync_agents.py --check
-python3 -m unittest discover -s tests -v
-python3 -m agentworks doctor
-```
-
-覆盖任务依赖、验收阻塞、重试上限、并发与可写互斥、跨会话恢复、项目隔离、过期交付识别、备份恢复和产物路径检查。可选的真实模型交接检查：
-
-```bash
-python3 scripts/smoke_runner.py --backend codex --execute
-```
-
-它只让两个真实角色处理本地测试简报，不进行市场调研或运营。验证结果保存在 `.agentworks/verification/`。
-
-## 配置依据
-
-- [Claude Code 项目指令](https://code.claude.com/docs/en/memory)
-- [Claude Code 子 Agent](https://code.claude.com/docs/en/sub-agents)
-- [Codex 自定义角色](https://learn.chatgpt.com/docs/agent-configuration/subagents)
-- [Codex 项目规则与技能](https://learn.chatgpt.com/docs/customization/overview)
-- [Codex 非交互执行](https://learn.chatgpt.com/docs/non-interactive-mode)
-
-Codex 已进行真实调用检查；Claude 的配置、命令适配和交接使用替身进程验证，本机未检测到 Claude CLI，尚未做真实模型连通性检查。详细范围见 [验收记录](docs/验收记录.md)。
+维护人员与 Agent 参考 [团队运行手册](docs/团队运行手册.md)、[桌面内部接口](docs/桌面内部接口.md) 和 [协作约定](docs/协作约定.md)。

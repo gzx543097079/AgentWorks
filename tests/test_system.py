@@ -1,20 +1,15 @@
-import concurrent.futures
 import contextlib
 import io
 import json
 import tempfile
-import threading
 import unittest
 import os
-import sys
-from unittest.mock import patch
 import zipfile
 from pathlib import Path
 
-from agentworks.backup import restore
-from agentworks.cli import export_project
+from agentworks.backup import restore, export_project
 from agentworks.core import Store, WorksError, load_config, validate_result, write_json
-from agentworks.runner import packet, run_tasks, submit, role_for, execute
+from agentworks.handoff import packet, submit
 
 
 def result(verdict="not_applicable", status="completed"):
@@ -155,43 +150,6 @@ class SystemTests(unittest.TestCase):
         self.assertNotIn("PRIVATE_PEER_OPINION", other_packet)
         self.assertIn("prototype", other_packet)
 
-    def test_call_limit_and_read_only_parallelism(self):
-        run = self.store.plan("alpha", "discovery")
-        barrier = threading.Barrier(2)
-
-        def fake(store, project, current, task, *args):
-            store.claim(task)
-            barrier.wait(timeout=3)
-            return store.finish(project, task, result=result())
-
-        with contextlib.redirect_stdout(io.StringIO()):
-            outcomes = run_tasks(self.store, "alpha", max_tasks=2, workers=2, execute_fn=fake)
-        self.assertEqual(len(outcomes), 2)
-        self.assertEqual([t["code"] for t in self.store.ready(run["id"])], ["channels"])
-
-    def test_writers_are_exclusive(self):
-        run = self.store.plan("alpha", "discovery")
-        with self.store.db() as db:
-            task = self.store.tasks(run["id"])[0]
-            task["spec"]["role"] = "developer"
-            db.execute("UPDATE tasks SET spec=? WHERE id=?", (json.dumps(task["spec"]), task["id"]))
-        active = []
-        guard = threading.Lock()
-
-        def fake(store, project, current, task, *args):
-            mode = role_for(current, task)["mode"]
-            with guard:
-                self.assertFalse(mode == "workspace-write" and active)
-                self.assertNotIn("workspace-write", active)
-                active.append(mode)
-            store.claim(task)
-            with guard:
-                active.remove(mode)
-            return store.finish(project, task, result=result())
-
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(len(run_tasks(self.store, "alpha", max_tasks=2, workers=2, execute_fn=fake)), 2)
-
     def test_backup_restore_continues_same_workflow(self):
         run = self.store.plan("alpha", "discovery")
         self.complete(self.store.ready(run["id"])[0])
@@ -235,35 +193,6 @@ class SystemTests(unittest.TestCase):
             self.assertEqual(self.store.run_status(run), "completed")
         self.assertEqual(len(self.store.runs("alpha")), 6)
 
-    def fake_codex(self, body):
-        binary = Path(self.temp.name) / "codex-stub"
-        binary.write_text("#!" + sys.executable + "\n" + body)
-        binary.chmod(0o755)
-        return patch("agentworks.backends.shutil.which", side_effect=lambda name: str(binary) if name == "codex" else None)
-
-    def test_process_adapter_persists_structured_result(self):
-        run = self.store.plan("alpha", "discovery")
-        task = self.store.ready(run["id"])[0]
-        body = "import sys,json,pathlib\nprompt=sys.stdin.read()\nassert '20年' in prompt\nassert sys.argv[sys.argv.index('--sandbox')+1]=='read-only'\npathlib.Path(sys.argv[sys.argv.index('--output-last-message')+1]).write_text(" + repr(json.dumps(result())) + ")\n"
-        with self.fake_codex(body):
-            self.assertEqual(execute(self.store, "alpha", run, task, 5), "completed")
-        self.assertEqual(self.store.tasks(run["id"])[0]["status"], "completed")
-        self.assertEqual(list((self.store.home / "projects/alpha/runs").rglob("*-process.json")), [])
-
-    def test_process_failure_is_visible_and_does_not_advance(self):
-        run = self.store.plan("alpha", "discovery")
-        task = self.store.ready(run["id"])[0]
-        with self.fake_codex("import sys\nsys.exit(7)\n"):
-            self.assertEqual(execute(self.store, "alpha", run, task, 5), "failed")
-        self.assertEqual(self.store.tasks(run["id"])[0]["status"], "failed")
-        self.assertNotIn("channels", [t["code"] for t in self.store.ready(run["id"])])
-
-    def test_process_timeout_stops_worker_and_preserves_failure(self):
-        run = self.store.plan("alpha", "discovery")
-        task = self.store.ready(run["id"])[0]
-        with self.fake_codex("import time\ntime.sleep(30)\n"):
-            self.assertEqual(execute(self.store, "alpha", run, task, 1), "failed")
-        self.assertIn("超时", self.store.tasks(run["id"])[0]["error"])
 
 
 if __name__ == "__main__":

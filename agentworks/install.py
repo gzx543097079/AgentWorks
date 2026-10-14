@@ -23,7 +23,7 @@ GITIGNORE = [
 RULES = """{start}
 ## AgentWorks 产品团队
 
-本仓库内嵌 AgentWorks（来源提交 {commit}），本仓库就是产品工作区。用户通过聊天运行海外产品团队，使用当前桌面会话的原生子 Agent 和工具，不另行启动模型命令行，不要求用户操作终端。
+本仓库内嵌 AgentWorks {version}（来源提交 {commit}），本仓库就是产品工作区。用户通过聊天运行海外产品团队，使用当前桌面会话的原生子 Agent 和工具，不另行启动模型命令行，不要求用户操作终端。
 
 - 与用户的回答、交付报告和项目文档一律使用简体中文；代码标识符、命令、路径和引用原文保持原样，目标市场文案使用当地语言。
 - 运行团队先读技能 `agentworks`（Codex `$agentworks`，Claude `/agentworks`）和 `.agentworks/engine/docs/团队运行手册.md`。原生角色名称以 `agentworks-` 开头，位于 `.codex/agents/` 与 `.claude/agents/`。
@@ -53,6 +53,7 @@ def localize(content):
 def payload(source):
     from scripts.sync_agents import generated
     files = {}
+    files[ENGINE + "/VERSION"] = (source / "VERSION").read_bytes()
     for folder, pattern in (("agentworks", "*.py"), ("config", "*.json"), ("docs", "*.md")):
         for path in sorted((source / folder).glob(pattern)):
             files[ENGINE + "/" + folder + "/" + path.name] = path.read_bytes()
@@ -116,8 +117,9 @@ def install(project, source=ROOT):
             changed.append(name + "（已移除）")
     commit = subprocess.run(["git", "-C", str(source), "rev-parse", "--short", "HEAD"],
                             capture_output=True, text=True).stdout.strip() or "unknown"
+    version = (source / "VERSION").read_text(encoding="utf-8").strip()
     for name, start, end, body in (
-        ("AGENTS.md", START, END, RULES.format(start=START, end=END, commit=commit)),
+        ("AGENTS.md", START, END, RULES.format(start=START, end=END, commit=commit, version=version)),
         ("CLAUDE.md", START, END, START + "\n@AGENTS.md\n" + END + "\n"),
         (".gitignore", GITIGNORE[0], GITIGNORE[-1], "\n".join(GITIGNORE) + "\n"),
     ):
@@ -129,12 +131,12 @@ def install(project, source=ROOT):
         if updated != text:
             path.write_text(updated, encoding="utf-8")
             changed.append(name)
-    record = {"format": 1, "source_commit": commit, "installed": now(),
+    record = {"format": 1, "version": version, "source_commit": commit, "installed": now(),
               "files": {name: digest(content) for name, content in files.items()}}
     if record["files"] != previous or not manifest.exists():
         manifest.parent.mkdir(parents=True, exist_ok=True)
         manifest.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return {"project": str(project), "source_commit": commit, "files": len(files), "changed": changed}
+    return {"project": str(project), "version": version, "source_commit": commit, "files": len(files), "changed": changed}
 
 
 def verify(project):

@@ -12,6 +12,11 @@ def receipt_path(store, project, run, task, attempt):
     return run_dir(store, project, run) / (str(task) + "-attempt-" + str(attempt) + "-desktop.json")
 
 
+def attempt_path(store, project, run, task, attempt, suffix):
+    return receipt_path(store, project, run, task, attempt).with_name(
+        str(task) + "-attempt-" + str(attempt) + "-" + suffix)
+
+
 class Workspace:
     """The parent desktop agent coordinates; child agents receive only task prompts."""
 
@@ -26,7 +31,8 @@ class Workspace:
         else:
             from scripts.sync_agents import synchronize
             drift = synchronize(check=True)
-        return {"roles": len(team["roles"]), "workflows": len(flows), "embedded": EMBEDDED,
+        from . import __version__
+        return {"version": __version__, "roles": len(team["roles"]), "workflows": len(flows), "embedded": EMBEDDED,
                 "configuration_drift": drift, "data_dir": str(self.store.home)}
 
     def status(self, project=None):
@@ -50,6 +56,11 @@ class Workspace:
         self.store.create(project, title, kind, market, brief)
         return self.status(project)
 
+    def set_kind(self, project, kind, reason):
+        """Record the chosen direction so later phases skip tasks for the other kind."""
+        self.store.set_kind(project, kind, reason)
+        return self.status(project)
+
     def plan(self, project, phase):
         self.store.plan(project, phase)
         return self.status(project)
@@ -70,7 +81,9 @@ class Workspace:
                 t for t in ready if role_for(run, t)["mode"] == "read-only"
             ][:max_tasks]
             # Materialize inputs before claiming, preserving retry context.
-            prompts = {t["id"]: packet(self.store, project, t) for t in batch}
+            deliveries = {t["id"]: attempt_path(self.store, project, run["id"], t["id"], t["attempts"] + 1, "delivery.json")
+                          for t in batch}
+            prompts = {t["id"]: packet(self.store, project, t, deliveries[t["id"]]) for t in batch}
             claimed, assignments = [], []
             try:
                 for task in batch:
@@ -82,10 +95,10 @@ class Workspace:
                     receipt = {"ticket": ticket, "host": host, "started": now()}
                     path = receipt_path(self.store, project, run["id"], task["id"], attempt)
                     write_json(path, receipt)
-                    path.with_name(path.name.replace("-desktop.json", "-prompt.txt")).write_text(
-                        prompts[task["id"]], encoding="utf-8")
-                    assignments.append({"ticket": ticket, "role": task["spec"]["role"],
-                                        "prompt": prompts[task["id"]]})
+                    prompt_file = attempt_path(self.store, project, run["id"], task["id"], attempt, "prompt.txt")
+                    prompt_file.write_text(prompts[task["id"]], encoding="utf-8")
+                    assignments.append({"ticket": ticket, "role": task["spec"]["role"], "prompt": prompts[task["id"]],
+                                        "prompt_file": str(prompt_file), "result_file": str(deliveries[task["id"]])})
                 with self.store.db() as db:
                     self.store.event(db, project, "desktop_started", host + ": " + ",".join(str(t["id"]) for t in batch))
             except Exception:
@@ -107,14 +120,24 @@ class Workspace:
             raise WorksError("桌面任务交接凭据不匹配。")
         return task
 
-    def complete(self, project, ticket, result):
-        """Validate a native agent's JSON result; never calls a model or spawns a process."""
+    def complete(self, project, ticket, result=None):
+        """Validate a native agent's JSON result; without a dict, read the attempt's delivery file."""
         with self.store.lock(project):
             task = self._active(project, ticket)
+            delivery = attempt_path(self.store, project, task["run"], task["id"], task["attempts"], "delivery.json")
+            if result is None:
+                if not delivery.is_file():
+                    raise WorksError("尚未找到交付文件：" + str(delivery))
+                try:
+                    result = read_json(delivery)
+                except ValueError as exc:
+                    raise WorksError("交付文件不是合法 JSON：" + str(exc)) from exc
             result = validate_result(result, self.store.workspace(project), task["spec"])
-            directory = run_dir(self.store, project, task["run"])
-            write_json(directory / (str(task["id"]) + "-attempt-" + str(task["attempts"]) + "-result.json"), result)
+            write_json(attempt_path(self.store, project, task["run"], task["id"], task["attempts"], "result.json"), result)
             save_result(self.store, project, task, result)
+            # The validated attempt result replaces the worker's draft.
+            if delivery.is_file():
+                delivery.unlink()
             return self.store.finish(project, task, result=result)
 
     def fail(self, project, ticket, reason):

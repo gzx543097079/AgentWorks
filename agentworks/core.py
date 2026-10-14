@@ -16,6 +16,9 @@ PRODUCT_ROOT = ROOT.parents[1] if EMBEDDED else None
 SKILLS_ROOT = PRODUCT_ROOT or ROOT
 
 
+KINDS = ("compare", "game", "tool")
+
+
 class WorksError(Exception):
     pass
 
@@ -70,6 +73,8 @@ def load_config():
         for task in flow["tasks"]:
             if task["id"] in seen or task["role"] not in roles or not set(task["depends"]) <= seen:
                 raise WorksError("工作流角色、任务顺序或依赖无效：" + phase)
+            if "kinds" in task and (task.get("gate") or not task["kinds"] or not set(task["kinds"]) <= set(KINDS)):
+                raise WorksError("任务适用类型无效，验收任务不能按类型跳过：" + phase)
             seen.add(task["id"])
         if not flow["tasks"][-1].get("gate"):
             raise WorksError("工作流必须以独立验收任务结束：" + phase)
@@ -166,7 +171,7 @@ class Store:
 
     def create(self, project, title, kind="compare", market="待选择", brief=""):
         slug(project)
-        if kind not in ("compare", "game", "tool"):
+        if kind not in KINDS:
             raise WorksError("产品类型无效。")
         with self.lock(project):
             with self.db() as db:
@@ -198,6 +203,16 @@ class Store:
                 (workspace / "input/README.md").write_text("# 输入资料\n\n放入真实用户反馈、竞品资料或经营数据，并附来源、日期和字段说明。AI模拟结果不得标作真实数据。\n", encoding="utf-8")
                 db.execute("INSERT INTO projects VALUES(?,?,?,?,?)", (project, title, kind, market, now()))
                 self.event(db, project, "created", title)
+        return self.project(project)
+
+    def set_kind(self, project, kind, reason):
+        if kind not in KINDS or not isinstance(reason, str) or not reason.strip():
+            raise WorksError("请提供有效的产品类型（compare、game、tool）和变更原因。")
+        with self.lock(project):
+            self.project(project)
+            with self.db() as db:
+                db.execute("UPDATE projects SET kind=? WHERE id=?", (kind, project))
+                self.event(db, project, "kind", kind + ": " + reason)
         return self.project(project)
 
     def runs(self, project):
@@ -256,11 +271,18 @@ class Store:
                         raise WorksError("前置交付已过期，请从 " + required + " 阶段重新评估。")
                     lineage = parent
                 prerequisite = previous["id"]
-            snapshot = {"team": team, "flow": flows[phase]}
+            # Tasks limited to other product kinds are not created; their dependents drop the edge.
+            kind = self.project(project)["kind"]
+            flow = json.loads(json.dumps(flows[phase]))
+            flow["tasks"] = [t for t in flow["tasks"] if kind in t.get("kinds", KINDS)]
+            kept = {t["id"] for t in flow["tasks"]}
+            for t in flow["tasks"]:
+                t["depends"] = [d for d in t["depends"] if d in kept]
+            snapshot = {"team": team, "flow": flow}
             with self.db() as db:
                 run = db.execute("INSERT INTO runs(project,phase,config,prerequisite,created) VALUES(?,?,?,?,?)",
                                  (project, phase, json.dumps(snapshot, ensure_ascii=False), prerequisite, now())).lastrowid
-                for task in flows[phase]["tasks"]:
+                for task in flow["tasks"]:
                     db.execute("INSERT INTO tasks(run,code,spec) VALUES(?,?,?)", (run, task["id"], json.dumps(task, ensure_ascii=False)))
                 self.event(db, project, "planned", phase + " #" + str(run))
         return self.latest(project)

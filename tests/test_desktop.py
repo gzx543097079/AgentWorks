@@ -34,7 +34,10 @@ class DesktopTests(unittest.TestCase):
             task = other.begin("alpha", "claude-code-desktop")[0]
             other.complete("alpha", task["ticket"], result())
             task = other.begin("alpha", "claude-code-desktop")[0]
-            self.assertIn("本地测试资料", task["prompt"])
+            # Upstream reports are referenced by path, not inlined.
+            self.assertNotIn("本地测试资料", task["prompt"])
+            self.assertIn("1-report.md", task["prompt"])
+            self.assertIn("本地测试资料", Path(json.loads(task["prompt"].split("任务上下文：\n", 1)[1])["dependencies"][0]["report_file"]).read_text(encoding="utf-8"))
             other.complete("alpha", task["ticket"], result())
             tasks = self.desktop.status("alpha")["stages"][0]["tasks"]
         self.assertEqual([t["attempts"] for t in tasks], [1, 1, 1] + [0] * (len(tasks) - 3))
@@ -162,6 +165,37 @@ class DesktopTests(unittest.TestCase):
         next_task = restored.begin("alpha", "claude-code-desktop")[0]
         self.assertIn("用户确认使用桌面端", next_task["prompt"])
         self.assertEqual(next_task["ticket"]["task"], legacy.tasks(legacy.latest("alpha")["id"])[1]["id"])
+
+    def test_worker_writes_delivery_inside_project_and_complete_reads_it(self):
+        task = self.desktop.begin("alpha", "codex-desktop")[0]
+        run = Path(task["prompt_file"]).parent
+        self.assertEqual(Path(task["result_file"]).parent, run)
+        self.assertTrue(run.is_relative_to(self.home.resolve()))
+        self.assertIn(task["result_file"], task["prompt"])
+        with self.assertRaises(WorksError):
+            self.desktop.complete("alpha", task["ticket"])
+        Path(task["result_file"]).write_text("{bad", encoding="utf-8")
+        with self.assertRaises(WorksError):
+            self.desktop.complete("alpha", task["ticket"])
+        Path(task["result_file"]).write_text(json.dumps(result(), ensure_ascii=False), encoding="utf-8")
+        self.assertEqual(self.desktop.complete("alpha", task["ticket"]), "completed")
+        names = sorted(path.name for path in run.iterdir())
+        self.assertEqual(names, ["1-attempt-1-desktop.json", "1-attempt-1-prompt.txt", "1-attempt-1-result.json", "1-report.md"])
+
+    def test_tasks_limited_to_other_kinds_are_not_planned(self):
+        for kind, absent, present in (("game", "tools", "games"), ("tool", "games", "tools")):
+            self.desktop.create("only-" + kind, "类型过滤", kind=kind)
+            self.desktop.plan("only-" + kind, "discovery")
+            tasks = {t["code"]: t["spec"] for t in self.desktop.status("only-" + kind)["stages"][0]["tasks"]}
+            self.assertNotIn(absent, tasks)
+            self.assertIn(present, tasks)
+            self.assertEqual(tasks["channels"]["depends"], [present])
+            self.assertNotIn(absent, tasks["decision"]["depends"])
+        self.desktop.set_kind("alpha", "tool", "立项选定工具方向")
+        self.assertEqual(self.desktop.status("alpha")["project"]["kind"], "tool")
+        self.assertEqual(self.desktop.history("alpha")[-1]["kind"], "kind")
+        with self.assertRaises(WorksError):
+            self.desktop.set_kind("alpha", "app", "无效类型")
 
     def test_full_workflow_can_be_completed_by_native_desktop_handoffs(self):
         assigned_roles = set()

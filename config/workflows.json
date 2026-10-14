@@ -2,11 +2,11 @@
   "discovery": {
     "name": "机会研究与比较", "requires": null,
     "tasks": [
-      {"id": "games", "role": "market_researcher", "title": "研究海外游戏机会", "depends": [], "prompt": "研究最多5个适合小团队验证的海外游戏方向，按项目预算和市场约束形成有来源的机会卡。若项目限定工具，说明不适用并把精力用于邻近工具机会。"},
-      {"id": "tools", "role": "market_researcher", "title": "研究海外工具机会", "depends": [], "prompt": "独立研究最多5个海外工具方向。记录具体痛点、替代方案、付费依据、竞品来源和低成本验证实验。若限定游戏，研究辅助工具或说明不适用。"},
+      {"id": "games", "role": "market_researcher", "title": "研究海外游戏机会", "depends": [], "kinds": ["compare", "game"], "prompt": "研究最多5个适合小团队验证的海外游戏方向，按项目预算和市场约束形成有来源的机会卡。"},
+      {"id": "tools", "role": "market_researcher", "title": "研究海外工具机会", "depends": [], "kinds": ["compare", "tool"], "prompt": "独立研究最多5个海外工具方向。记录具体痛点、替代方案、付费依据、竞品来源和低成本验证实验。"},
       {"id": "channels", "role": "growth_operator", "title": "验证首批用户渠道", "depends": ["games", "tools"], "prompt": "检查候选机会的首批用户来源，列出具体可接触渠道、获取成本假设和验证动作。只研究和准备材料，不联系第三方。"},
       {"id": "demand", "role": "user_researcher", "title": "核对需求证据与真人验证缺口", "depends": ["games", "tools"], "prompt": "区分竞品评论、AI 推断和已有真实研究；列出候选用户、关键假设、招募渠道、筛选标准及最小访谈或任务测试。不联系第三方；没有真人记录时交付验证计划并明确尚未验证。"},
-      {"id": "economics", "role": "commercial_analyst", "title": "比较盈利依据与验证成本", "depends": ["games", "tools", "channels", "demand"], "prompt": "比较游戏和工具的付费证据、同周期收入成本和最小验证投入，包括真人验证成本。保留未知数，给出情景和敏感性分析。"},
+      {"id": "economics", "role": "commercial_analyst", "title": "比较盈利依据与验证成本", "depends": ["games", "tools", "channels", "demand"], "prompt": "比较候选方向（游戏或工具）的付费证据、同周期收入成本和最小验证投入，包括真人验证成本。保留未知数，给出情景和敏感性分析。"},
       {"id": "evidence_audit", "role": "agent_quality", "title": "独立检查研究证据与交接", "depends": ["games", "tools", "channels", "demand", "economics"], "prompt": "抽查关键结论与来源是否相符，检查模拟被当事实、成本遗漏、重复研究和相互矛盾的建议。交付具体问题供总控裁决；只报告实际检查范围，有数据才计算协作成本。"},
       {"id": "decision", "role": "director", "title": "形成项目候选与立项建议", "depends": ["games", "tools", "channels", "demand", "economics", "evidence_audit"], "gate": true, "prompt": "按证据推荐最多2个低成本验证对象及一个优先方向。逐项裁决证据审计发现的问题。pass 只表示研究交付可进入需求设计，不表示已盈利或已获用户验证；关键证据不足时 blocked 或 revise。"}
     ]
@@ -16,9 +16,9 @@
     "tasks": [
       {"id": "domain", "role": "domain_expert", "title": "核对行业流程与专业约束", "depends": [], "prompt": "根据选定方向核查目标行业的流程、术语、业务规则与边界案例，给出来源及领域验收条件。无专门行业要求时说明不适用；方向不清或专业事实无法核实时列具体缺口，不能编造规则。"},
       {"id": "requirements", "role": "product_manager", "title": "定义最小产品", "depends": ["domain"], "prompt": "依据研究结果、领域约束与项目简报，明确选定方向、用户任务、核心流程、最小范围、验收标准和停止条件。明确游戏或工具、目标购买方及本轮需要的美术和音频。若多个方向仍未选择，输出 blocked 并说明所需决策。 用职责技能中的需求模板给 AC 编号及自动/人工验证方式，订阅、账户与本地化要求仅在项目适用时纳入。"},
-      {"id": "gameplay", "role": "game_designer", "title": "定义玩法或确认不适用", "depends": ["requirements"], "prompt": "游戏项目设计核心循环、操作反馈与可玩原型计划；工具项目明确不适用，避免强加游戏功能。"},
-      {"id": "levels", "role": "level_designer", "title": "设计最小关卡与教学节奏", "depends": ["requirements", "gameplay"], "prompt": "游戏项目给出最小关卡集、教学顺序、布局、挑战和逐关验收标准，供数值与开发使用。工具项目完成不适用说明。"},
-      {"id": "balance", "role": "balance_designer", "title": "定义数值与平衡模型", "depends": ["requirements", "gameplay", "levels"], "prompt": "为游戏给出可实现的难度、奖励、成长及资源参数表、公式、极端情景和验证办法；模拟与真人试玩分开。工具项目完成不适用说明。"},
+      {"id": "gameplay", "role": "game_designer", "title": "定义玩法或确认不适用", "depends": ["requirements"], "kinds": ["compare", "game"], "prompt": "游戏项目设计核心循环、操作反馈与可玩原型计划；工具项目明确不适用，避免强加游戏功能。"},
+      {"id": "levels", "role": "level_designer", "title": "设计最小关卡与教学节奏", "depends": ["requirements", "gameplay"], "kinds": ["compare", "game"], "prompt": "游戏项目给出最小关卡集、教学顺序、布局、挑战和逐关验收标准，供数值与开发使用。工具项目完成不适用说明。"},
+      {"id": "balance", "role": "balance_designer", "title": "定义数值与平衡模型", "depends": ["requirements", "gameplay", "levels"], "kinds": ["compare", "game"], "prompt": "为游戏给出可实现的难度、奖励、成长及资源参数表、公式、极端情景和验证办法；模拟与真人试玩分开。工具项目完成不适用说明。"},
       {"id": "research_plan", "role": "user_researcher", "title": "设计真实用户研究与验证", "depends": ["requirements", "domain"], "prompt": "制定筛选标准、招募材料、访谈和任务测试包，明确要推翻的假设、观察指标、成功和停止条件以及样本局限。标注每项验证应在原型、上线或增长哪个阶段完成，供阶段验收追踪。此任务准备计划，不声称已开展访谈。"},
       {"id": "measurement", "role": "data_analyst", "title": "定义事件与实验测量口径", "depends": ["requirements", "research_plan"], "prompt": "配合研究计划定义核心事件、指标、分母、窗口、样本局限及成功和停止条件，区分定性发现与定量结论。"},
       {"id": "positioning", "role": "product_marketer", "title": "明确定位与待验证卖点", "depends": ["requirements", "domain"], "prompt": "提炼目标受众、现有替代、具体价值与有依据的差异点，给出目标语言核心信息和验证方式。计划能力与已有能力分开，供界面和后续获客使用。"},

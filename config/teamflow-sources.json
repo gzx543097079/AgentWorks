@@ -1,0 +1,435 @@
+{
+  "repository": "https://github.com/gzx543097079/iOS_TeamFlow",
+  "tag": "teamflow-v1.0.0",
+  "commit": "e2088f01b7834ca1cf7217004309fe0cb22ee3bc",
+  "resources": [
+    {
+      "source": ".agents/teamflow-core/references/WORKFLOW.md",
+      "owner": "director",
+      "destination": ".agents/skills/agentworks-director/references/teamflow-core-workflow.md",
+      "source_sha256": "4aaaa0463d3a9f599f37f1d03b414bb0a55e1e01e7939d0e9509b1aef4f86755",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/BOUNDARIES.md",
+      "owner": "director",
+      "destination": ".agents/skills/agentworks-director/references/teamflow-core-boundaries.md",
+      "source_sha256": "1f46fd06a6afbcceaee9c8ffafbba80bd40a38352ed51780c014a7f82dd0d8dd",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/templates/requirement.md",
+      "owner": "product_manager",
+      "destination": ".agents/skills/agentworks-product-manager/references/teamflow-core-templates-requirement.md",
+      "source_sha256": "f8696a837f37452baae94835bac8dc767ccade064b6ec789ecdd782ab4e01044",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/templates/feature.md",
+      "owner": "product_manager",
+      "destination": ".agents/skills/agentworks-product-manager/references/teamflow-ios-templates-feature.md",
+      "source_sha256": "b4fbdd3bf949d8a35189e29a5a0eb89d6cac183356299f4dd43d33d0b757258d",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/templates/new-project.md",
+      "owner": "product_manager",
+      "destination": ".agents/skills/agentworks-product-manager/references/teamflow-ios-templates-new-project.md",
+      "source_sha256": "52fce5b61b5ebdbd6e51fea12a778141cf92a4143862c5c8c47da534c229e54e",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/ARCHITECTURE.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-core-architecture.md",
+      "source_sha256": "22728fda5491d35602140bfe08f84abc06473098a087222c7aba9a0b0b791c66",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/DEPENDENCIES.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-core-dependencies.md",
+      "source_sha256": "1f100f824ebbb4e72fcb64dfd8c7f95d301271c545a5fdd14511a73b75e2496b",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/MODULE-CONTEXT.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-core-module-context.md",
+      "source_sha256": "8d6cb33a1209848a18358b67f21c9e87ec53ca0c5a50ee9bcb42a87180944e3c",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/REVIEW.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-core-review.md",
+      "source_sha256": "a49fb717bf46dbdd6f3446a6f5ef0e9b33b3a9de64f8e1e0c4d6c4bb902c2d12",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/templates/project-context.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-core-templates-project-context.md",
+      "source_sha256": "bbf35067579c5b3b2972f65f72a965368c462aa2c8e47c5c724b8be85c68806c",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/ARCHITECTURE.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-ios-architecture.md",
+      "source_sha256": "bf0226182c94d111d5d59119e67881232873c43c949abab53b8af9038272cc90",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/EXISTING-PROJECT.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-ios-existing-project.md",
+      "source_sha256": "abf6f8eda46f7c5ca982b72cff5eaaada29335a4465e2403b20fabcea35cf106",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/TEAM.md",
+      "owner": "technical_lead",
+      "destination": ".agents/skills/agentworks-technical-lead/references/teamflow-godot-team.md",
+      "source_sha256": "4401c18f0e0dadf135e16c573dbe7480bb414cd133e33eb15fd1218d7ad5ee59",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/standards/comments.md",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/references/teamflow-core-standards-comments.md",
+      "source_sha256": "a7ac60bd20c2bc6344580c9e525dc04dd7613acff0c41cb2a0728f81663ea9f8",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/APP-LIFECYCLE.md",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/references/teamflow-ios-app-lifecycle.md",
+      "source_sha256": "548f12a482020e45836d789668e9df046c5329eb329372918e2a674e42bd01e2",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/LOGGING.md",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/references/teamflow-ios-logging.md",
+      "source_sha256": "f83d60a3ada2e17ffdb51f6f0d6303c3133e510e417a64e2ff835c470a20af29",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/standards/swift.md",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/references/teamflow-ios-standards-swift.md",
+      "source_sha256": "225d835b0564c9fdc082b85732227629f128b644cf2b858f2b5181c2ed89af3f",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/standards/swiftui.md",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/references/teamflow-ios-standards-swiftui.md",
+      "source_sha256": "09b9854fb990a1d993c5bd0d95ce72bf13410c361c42485e8bcfefb3da3ff004",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/standards/objective-c.md",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/references/teamflow-ios-standards-objective-c.md",
+      "source_sha256": "5f28fa1fe3c4f194713ba3bcff63e86cef7bf4318e55c96bee051d566fceae09",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/GDSCRIPT.md",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/references/teamflow-godot-gdscript.md",
+      "source_sha256": "aa9bb4a939ffefb16ab478514e607f484f717277fadeaae85cfab354c5ae298a",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/standards/ui.md",
+      "owner": "ui_designer",
+      "destination": ".agents/skills/agentworks-ui-designer/references/teamflow-ios-standards-ui.md",
+      "source_sha256": "257dfd66bbd72e9f3f0771fe5839ad7528dc6db3bd862717957c8f34d50a1ed8",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/standards/ui-keyboard.md",
+      "owner": "ui_designer",
+      "destination": ".agents/skills/agentworks-ui-designer/references/teamflow-ios-standards-ui-keyboard.md",
+      "source_sha256": "9ec674dbf7d0374023d7cad983d37aa870c1c56e2323cae0b85de2e464b8ecdb",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/standards/ui-paywall.md",
+      "owner": "ui_designer",
+      "destination": ".agents/skills/agentworks-ui-designer/references/teamflow-ios-standards-ui-paywall.md",
+      "source_sha256": "66d9af958cef3da1ddd7e01d1f09c1d0ae7592b790b4ae56cb1853da2b883a70",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/CHECKS.md",
+      "owner": "qa_engineer",
+      "destination": ".agents/skills/agentworks-qa-engineer/references/teamflow-core-checks.md",
+      "source_sha256": "d79167a30bedec652d3f409d5211b96541d9836f8a7ce0cbd5e9fdb4b819aca5",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/PERFORMANCE.md",
+      "owner": "qa_engineer",
+      "destination": ".agents/skills/agentworks-qa-engineer/references/teamflow-ios-performance.md",
+      "source_sha256": "2f4b104f23d000dbeb5789d8926194e8e114f47b6fbc77131eefa82417adea4a",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/CHECKS.md",
+      "owner": "qa_engineer",
+      "destination": ".agents/skills/agentworks-qa-engineer/references/teamflow-godot-checks.md",
+      "source_sha256": "21f451876ba0197ea2dbd3d82015adb04c33f7a41dfbc4173c1fb08f139405ea",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/TESTING.md",
+      "owner": "qa_engineer",
+      "destination": ".agents/skills/agentworks-qa-engineer/references/teamflow-godot-testing.md",
+      "source_sha256": "163ee5540b35c3dc323b830d299e9bd7b0f5b532c18b5dc68fdf9bad26e1b9ab",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/PERFORMANCE.md",
+      "owner": "qa_engineer",
+      "destination": ".agents/skills/agentworks-qa-engineer/references/teamflow-godot-performance.md",
+      "source_sha256": "0b82d94f21a83919609884450affd37f28413e519fe84725125f123db3479a46",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/LOCALIZATION.md",
+      "owner": "localization_specialist",
+      "destination": ".agents/skills/agentworks-localization-specialist/references/teamflow-core-localization.md",
+      "source_sha256": "457007488b90b73eb42a5f5c2bbcdabff23f630fcf00ad29bcdcc54ec5cd4ce4",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/LOCALIZATION.md",
+      "owner": "localization_specialist",
+      "destination": ".agents/skills/agentworks-localization-specialist/references/teamflow-ios-localization.md",
+      "source_sha256": "793404dd914d4bf423790d3cc377fa2edb8ebab8732ae1062a6a3d4ea072dd6e",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/APP-RELEASE.md",
+      "owner": "release_engineer",
+      "destination": ".agents/skills/agentworks-release-engineer/references/teamflow-ios-app-release.md",
+      "source_sha256": "b83921c0426decbb4fcd1e43ec041ef3d09bca6a2aebb6623adcd768ca7c8a40",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/references/templates/app-release.md",
+      "owner": "release_engineer",
+      "destination": ".agents/skills/agentworks-release-engineer/references/teamflow-ios-templates-app-release.md",
+      "source_sha256": "cd9118c569051cc490801bb619833303e4b2de609479953700b894a706ca4ab4",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/IOS.md",
+      "owner": "release_engineer",
+      "destination": ".agents/skills/agentworks-release-engineer/references/teamflow-godot-ios.md",
+      "source_sha256": "a2767e97b16da75d49773f2ac6cf121cb1aa098a727caa38d206d52efe9f21e6",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/RELEASE.md",
+      "owner": "release_engineer",
+      "destination": ".agents/skills/agentworks-release-engineer/references/teamflow-godot-release.md",
+      "source_sha256": "d9a46e50442b8b120e8bd06b0151b5a2f52bddef80fe32b49ea078edd71675c6",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/Godot/references/ENGINE.md",
+      "owner": "game_designer",
+      "destination": ".agents/skills/agentworks-game-designer/references/teamflow-godot-engine.md",
+      "source_sha256": "654720cab3e658c80f2bbb0a991a2e1dc3054ba4ed7c973647248dbf58f6647b",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/REPAIR.md",
+      "owner": "agent_quality",
+      "destination": ".agents/skills/agentworks-agent-quality/references/teamflow-core-repair.md",
+      "source_sha256": "858c1f20b0cdb1a6fe2b9eaeda5c039c9598ea8eabab50dbe67453539b826fc9",
+      "treatment": "adapted",
+      "adaptation": "按职责重定位并重写链接；需要时将状态、命令、目标目录或语言默认适配为 AgentWorks。"
+    },
+    {
+      "source": ".agents/skills/iOS/scripts/install_logging.py",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/scripts/install_logging.py",
+      "source_sha256": "cb8b1850f5d2545d403d313da067e3e5180ec09765b5a8a80259816aea1e6765",
+      "treatment": "adapted",
+      "adaptation": "从共享技能只读资产复制到指定产品工程；保留幂等、冲突与目标路径保护。"
+    },
+    {
+      "source": ".agents/skills/Godot/scripts/verify_godot.py",
+      "owner": "qa_engineer",
+      "destination": ".agents/skills/agentworks-qa-engineer/scripts/verify_godot.py",
+      "source_sha256": "86d4676a0ea75bd73cad5a3c7ecf8de2a91bcffddeb8eac4118d7adbf6c51d7a",
+      "treatment": "copied",
+      "adaptation": "无代码改动；实际游戏根由调用者指定。"
+    },
+    {
+      "source": ".agents/skills/Godot/scripts/export_ios.py",
+      "owner": "release_engineer",
+      "destination": ".agents/skills/agentworks-release-engineer/scripts/export_ios.py",
+      "source_sha256": "2bc81241b17943980aa877ca8cd1d8fce6a08c8da1fdb03360e58f30156ab4f4",
+      "treatment": "adapted",
+      "adaptation": "复用 QA 引擎定位；输出限制为游戏根 build/ 下新目录，拒绝覆盖旧构建或越界；版本检查增加超时。"
+    },
+    {
+      "source": ".agents/skills/iOS/assets/logging/TFLogger.swift",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/assets/logging/TFLogger.swift",
+      "source_sha256": "a49c858d95bb5d14fe3bd9185630cc5df0c3e88a8e43ef09d9aca76b368ed447",
+      "treatment": "copied",
+      "adaptation": "源码原样保留；实际产品仍需验证目标构建。"
+    },
+    {
+      "source": ".agents/skills/iOS/assets/logging/TFLogger.h",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/assets/logging/TFLogger.h",
+      "source_sha256": "5a9600abc2515dea875987d94942d8be660be6d373784c3778bc774822c687a0",
+      "treatment": "copied",
+      "adaptation": "源码原样保留；实际产品仍需验证目标构建。"
+    },
+    {
+      "source": ".agents/skills/iOS/assets/logging/TFLogger.m",
+      "owner": "developer",
+      "destination": ".agents/skills/agentworks-developer/assets/logging/TFLogger.m",
+      "source_sha256": "9f4becfac5c7e9b2e6c1f51d843270bef844bd2bcb6496b3ca5e89a075b2780f",
+      "treatment": "copied",
+      "adaptation": "源码原样保留；实际产品仍需验证目标构建。"
+    }
+  ],
+  "not_installed": [
+    {
+      "source": ".agents/project-checks.json",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/skills/Godot/SKILL.md",
+      "treatment": "not_installed",
+      "reason": "原 iOS/Godot 路由拆为角色技能，不保留整套入口。"
+    },
+    {
+      "source": ".agents/skills/Godot/assets/project-checks.example.json",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/skills/iOS/SKILL.md",
+      "treatment": "not_installed",
+      "reason": "原 iOS/Godot 路由拆为角色技能，不保留整套入口。"
+    },
+    {
+      "source": ".agents/teamflow-core/assets/ci/github-teamflow.yml",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/assets/permissions/claude-settings.json",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/assets/permissions/codex.rules",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/COMMANDS.md",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/INSTALL.md",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/references/VERSION",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/diagnostics.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/module_context.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/project_checks.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/requirement_model.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/setup_project.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/teamflow.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/teamflow_common.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    },
+    {
+      "source": ".agents/teamflow-core/scripts/upgrade.py",
+      "treatment": "not_installed",
+      "reason": "原安装/调度/升级/权限或测试配置依赖原工程；由 AgentWorks 现有调度与同步负责，未安装。"
+    }
+  ]
+}

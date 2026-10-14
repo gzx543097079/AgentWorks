@@ -47,6 +47,7 @@ def within(root, name):
 
 
 def load_config():
+    from .skills import role_skills
     team = read_json(ROOT / "config/team.json")
     flows = read_json(ROOT / "config/workflows.json")
     roles = {r["id"]: r for r in team["roles"]}
@@ -55,6 +56,11 @@ def load_config():
     for role in roles.values():
         if role["experience_years"] != 20 or role["mode"] not in ("read-only", "workspace-write"):
             raise WorksError("角色经验或权限配置无效。")
+        try:
+            if not role_skills(ROOT, role):
+                raise ValueError("当前团队的角色必须绑定技能：" + role["id"])
+        except ValueError as exc:
+            raise WorksError(str(exc)) from exc
     for phase, flow in flows.items():
         seen = set()
         for task in flow["tasks"]:

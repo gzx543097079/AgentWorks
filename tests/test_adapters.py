@@ -18,10 +18,11 @@ class AdapterTests(unittest.TestCase):
 
     def test_generation_removes_retired_roles_but_preserves_custom_roles(self):
         root = self.root / "config-repo"
-        for source in ("config/team.json", ".agents/skills/agentworks/SKILL.md"):
+        for source in ("config/team.json",):
             path = root / source
             path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / source, path)
+        shutil.copytree(ROOT / ".agents/skills", root / ".agents/skills", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         synchronize(root)
         team = json.loads((root / "config/team.json").read_text())
         for folder, pattern in (("roles", "*.md"), (".codex/agents", "*.toml"), (".claude/agents", "*.md")):

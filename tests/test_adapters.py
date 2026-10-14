@@ -23,10 +23,11 @@ class AdapterTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / source, path)
         synchronize(root)
-        self.assertEqual(len(list((root / "roles").glob("*.md"))), 15)
+        team = json.loads((root / "config/team.json").read_text())
+        for folder, pattern in (("roles", "*.md"), (".codex/agents", "*.toml"), (".claude/agents", "*.md")):
+            self.assertEqual(len(list((root / folder).glob(pattern))), len(team["roles"]))
         custom = root / ".claude/agents/custom.md"
         custom.write_text("A user-authored custom role")
-        team = json.loads((root / "config/team.json").read_text())
         removed = team["roles"].pop()
         write_json(root / "config/team.json", team)
         drift = synchronize(root, check=True)
@@ -35,4 +36,3 @@ class AdapterTests(unittest.TestCase):
         self.assertFalse((root / "roles" / (removed["id"] + ".md")).exists())
         self.assertTrue(custom.exists())
         self.assertEqual(synchronize(root, check=True), [])
-

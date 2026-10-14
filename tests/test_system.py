@@ -60,7 +60,7 @@ class SystemTests(unittest.TestCase):
         a = self.store.plan("alpha", "discovery")
         b = self.store.plan("alpha", "discovery")
         self.assertEqual(a["id"], b["id"])
-        self.assertEqual(len(self.store.tasks(a["id"])), 5)
+        self.assertEqual(len(self.store.tasks(a["id"])), len(load_config()[1]["discovery"]["tasks"]))
 
     def test_dependencies_prevent_premature_completion(self):
         run = self.store.plan("alpha", "discovery")
@@ -85,7 +85,7 @@ class SystemTests(unittest.TestCase):
 
     def test_unvalidated_gate_cannot_pass(self):
         run = self.store.plan("alpha", "discovery")
-        for _ in range(4):
+        while not self.store.ready(run["id"])[0]["spec"].get("gate"):
             self.complete(self.store.ready(run["id"])[0])
         gate = self.store.ready(run["id"])[0]
         self.assertEqual(self.complete(gate, result()), "needs_revision")
@@ -141,14 +141,41 @@ class SystemTests(unittest.TestCase):
         self.finish_phase("discovery")
         self.finish_phase("product")
         run = self.store.plan("alpha", "design")
-        self.complete(self.store.ready(run["id"])[0])
-        tasks = self.store.ready(run["id"])
+        while not any(t["code"] == "expert" for t in self.store.ready(run["id"])):
+            self.complete(self.store.ready(run["id"])[0])
+        tasks = {t["code"]: t for t in self.store.ready(run["id"])}
         marker = result()
         marker["report"] = "PRIVATE_PEER_OPINION"
-        self.complete(tasks[0], marker)
-        other_packet = packet(self.store, "alpha", tasks[1])
+        self.complete(tasks["expert"], marker)
+        other_packet = packet(self.store, "alpha", tasks["newcomer"])
         self.assertNotIn("PRIVATE_PEER_OPINION", other_packet)
         self.assertIn("prototype", other_packet)
+
+    def assert_review_blocks_acceptance(self, gate_code, verdict):
+        for phase in ("discovery", "product", "design"):
+            self.finish_phase(phase)
+        run = self.store.plan("alpha", "build")
+        while not any(t["code"] == gate_code for t in self.store.ready(run["id"])):
+            for task in self.store.ready(run["id"]):
+                self.complete(task)
+        tasks = {t["code"]: t for t in self.store.tasks(run["id"])}
+        self.complete(tasks[gate_code], result(verdict))
+        other_code = "security_gate" if gate_code == "code_gate" else "code_gate"
+        self.complete(tasks[other_code])
+        self.assertEqual(self.store.ready(run["id"]), [])
+        with self.assertRaises(WorksError):
+            self.complete(tasks["acceptance"])
+        with self.assertRaises(WorksError):
+            self.store.plan("alpha", "launch")
+        self.store.retry("alpha", tasks[gate_code]["id"], "离线夹具：已补充该检查所需的验证证据")
+        self.complete(self.store.ready(run["id"])[0], result("pass"))
+        self.assertEqual([t["code"] for t in self.store.ready(run["id"])], ["acceptance"])
+
+    def test_code_review_revision_prevents_final_acceptance(self):
+        self.assert_review_blocks_acceptance("code_gate", "revise")
+
+    def test_security_review_block_prevents_final_acceptance(self):
+        self.assert_review_blocks_acceptance("security_gate", "blocked")
 
     def test_backup_restore_continues_same_workflow(self):
         run = self.store.plan("alpha", "discovery")

@@ -18,11 +18,23 @@
 
 ### 安装到产品仓库（推荐）
 
-也可以把团队装进某个产品仓库，例如一个空的 `Cleaner` 文件夹。在 AgentWorks 会话里说：
+也可以把团队装进某个产品仓库，例如一个空的 `Cleaner` 文件夹。按当前打开的文件夹选择一种说法：
 
-> 把 AgentWorks 安装到 ~/Desktop/Cleaner。
+| 场景 | 在聊天里说 |
+|---|---|
+| 在 AgentWorks 会话中（推荐） | 把 AgentWorks 安装到 ~/Desktop/Cleaner。 |
+| 在新文件夹的会话中，本机已有 AgentWorks | 运行 `python3 ~/Desktop/AgentWorks/scripts/install.py .`，把 AgentWorks 安装到当前文件夹，并告诉我改动了哪些文件。 |
+| 在新文件夹的会话中，本机没有 AgentWorks | 把 `git@github.com:gzx543097079/AgentWorks.git` 的 v1.0.0 克隆到临时目录，运行其中的 `scripts/install.py`，安装到当前文件夹，并告诉我改动了哪些文件。 |
 
-之后在桌面端直接打开 `Cleaner` 使用团队。该仓库就是产品工作区：产品文件写在 `design/`、`app/`，简报、记忆、任务包、交付报告和状态库都在 `Cleaner/.agentworks/`，随产品仓库提交（锁文件和 `input/` 中的真实用户资料除外）。一个产品仓库对应一个项目。AgentWorks 更新后，再说一次“安装到 Cleaner”即可升级，已有进度保留。
+新文件夹里还没有 AgentWorks 规则，所以后两种需要告诉 Agent 源仓库的位置。也可以自己在终端运行：
+
+```bash
+python3 ~/Desktop/AgentWorks/scripts/install.py ~/Desktop/Cleaner
+```
+
+安装后**新开一个会话**再打开 `Cleaner`：角色、技能和 `CLAUDE.md` 只在会话启动时加载。然后说“使用 AgentWorks 新建项目，先比较游戏和工具，再按盈利证据选择方向”。
+
+该仓库就是产品工作区：产品文件写在 `design/`、`app/`，简报、记忆、任务包、交付报告和状态库都在 `Cleaner/.agentworks/`，随产品仓库提交（锁文件和 `input/` 中的真实用户资料除外）。一个产品仓库对应一个项目。安装只在原有 `AGENTS.md`、`CLAUDE.md`、`.gitignore` 中追加带标记的区块；遇到同名的非 AgentWorks 文件会停止，不写入任何内容。AgentWorks 更新后，用同样的说法再安装一次即可升级，已有进度保留。
 
 [桌面使用指南](docs/使用指南.md) · [两桌面端共用说明](docs/跨环境使用.md) · [验收记录](docs/验收记录.md)
 

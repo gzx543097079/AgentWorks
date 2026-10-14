@@ -3,7 +3,7 @@ import secrets
 
 from .backup import export_project, restore
 from .core import EMBEDDED, PRODUCT_ROOT, Store, WorksError, load_config, now, read_json, validate_result, write_json
-from .handoff import packet, role_for, run_dir, save_result
+from .handoff import packet, placement, publish_reports, role_for, run_dir, save_result
 
 HOSTS = ("codex-desktop", "claude-code-desktop")
 
@@ -63,7 +63,13 @@ class Workspace:
 
     def plan(self, project, phase):
         self.store.plan(project, phase)
+        publish_reports(self.store, project)
         return self.status(project)
+
+    def publish(self, project):
+        """Write completed reports that are missing from the project's document folders."""
+        with self.store.lock(project):
+            return publish_reports(self.store, project)
 
     def begin(self, project, host, max_tasks=1):
         """Reserve a batch before native delegation; writers always run alone."""
@@ -84,6 +90,10 @@ class Workspace:
             deliveries = {t["id"]: attempt_path(self.store, project, run["id"], t["id"], t["attempts"] + 1, "delivery.json")
                           for t in batch}
             prompts = {t["id"]: packet(self.store, project, t, deliveries[t["id"]]) for t in batch}
+            for task in batch:
+                where = placement(self.store, project, task)
+                for folder in (where["dirs"] if where else []):
+                    (self.store.workspace(project) / folder).mkdir(parents=True, exist_ok=True)
             claimed, assignments = [], []
             try:
                 for task in batch:
@@ -97,8 +107,12 @@ class Workspace:
                     write_json(path, receipt)
                     prompt_file = attempt_path(self.store, project, run["id"], task["id"], attempt, "prompt.txt")
                     prompt_file.write_text(prompts[task["id"]], encoding="utf-8")
+                    # A ready-made delegation line keeps any parent session on the current handoff paths.
+                    message = ("读取任务包 " + str(prompt_file) + " 并严格按其执行；把交付 JSON 写入 "
+                               + str(deliveries[task["id"]]) + "，其他交付文件写入任务包 output_dirs 指定的项目目录。完成后简短回复摘要。")
                     assignments.append({"ticket": ticket, "role": task["spec"]["role"], "prompt": prompts[task["id"]],
-                                        "prompt_file": str(prompt_file), "result_file": str(deliveries[task["id"]])})
+                                        "prompt_file": str(prompt_file), "result_file": str(deliveries[task["id"]]),
+                                        "message": message})
                 with self.store.db() as db:
                     self.store.event(db, project, "desktop_started", host + ": " + ",".join(str(t["id"]) for t in batch))
             except Exception:
@@ -132,13 +146,16 @@ class Workspace:
                     result = read_json(delivery)
                 except ValueError as exc:
                     raise WorksError("交付文件不是合法 JSON：" + str(exc)) from exc
-            result = validate_result(result, self.store.workspace(project), task["spec"])
+            where = placement(self.store, project, task)
+            result = validate_result(result, self.store.workspace(project), task["spec"], where and where["dirs"])
             write_json(attempt_path(self.store, project, task["run"], task["id"], task["attempts"], "result.json"), result)
             save_result(self.store, project, task, result)
             # The validated attempt result replaces the worker's draft.
             if delivery.is_file():
                 delivery.unlink()
-            return self.store.finish(project, task, result=result)
+            status = self.store.finish(project, task, result=result)
+            publish_reports(self.store, project)
+            return status
 
     def fail(self, project, ticket, reason):
         if not isinstance(reason, str) or not reason.strip():
@@ -167,7 +184,7 @@ class Workspace:
         if not isinstance(text, str) or not text.strip():
             raise WorksError("项目记忆不能为空。")
         with self.store.lock(project):
-            with (self.store.meta(project) / "MEMORY.md").open("a", encoding="utf-8") as out:
+            with self.store.meta_file(project, "memory").open("a", encoding="utf-8") as out:
                 out.write("\n- " + now() + " " + text + "\n")
             with self.store.db() as db:
                 self.store.event(db, project, "note", text)

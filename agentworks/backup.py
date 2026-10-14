@@ -41,8 +41,8 @@ def restore(store, archive):
                             target.parent.mkdir(parents=True, exist_ok=True)
                             with z.open(item) as source, target.open("wb") as out:
                                 shutil.copyfileobj(source, out)
-                    brief = staged / ("BRIEF.md" if store.product_root else "workspace/BRIEF.md")
-                    if not brief.is_file():
+                    # Embedded briefs live in the product repository and come back with its Git history.
+                    if not store.product_root and not (staged / "workspace/BRIEF.md").is_file():
                         raise WorksError("备份缺少项目简报。")
                     db.execute("INSERT INTO projects VALUES(?,?,?,?,?)", tuple(project[k] for k in ("id", "title", "kind", "market", "created")))
                     for entry in snapshot["runs"]:

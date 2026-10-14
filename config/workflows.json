@@ -1,86 +1,86 @@
 {
   "discovery": {
-    "name": "机会研究与比较", "requires": null,
+    "name": "机会研究与比较", "docs": "文档/01-机会研究", "requires": null,
     "tasks": [
-      {"id": "games", "role": "market_researcher", "title": "研究海外游戏机会", "depends": [], "kinds": ["compare", "game"], "prompt": "研究最多5个适合小团队验证的海外游戏方向，按项目预算和市场约束形成有来源的机会卡。"},
-      {"id": "tools", "role": "market_researcher", "title": "研究海外工具机会", "depends": [], "kinds": ["compare", "tool"], "prompt": "独立研究最多5个海外工具方向。记录具体痛点、替代方案、付费依据、竞品来源和低成本验证实验。"},
-      {"id": "channels", "role": "growth_operator", "title": "验证首批用户渠道", "depends": ["games", "tools"], "prompt": "检查候选机会的首批用户来源，列出具体可接触渠道、获取成本假设和验证动作。只研究和准备材料，不联系第三方。"},
-      {"id": "demand", "role": "user_researcher", "title": "核对需求证据与真人验证缺口", "depends": ["games", "tools"], "prompt": "区分竞品评论、AI 推断和已有真实研究；列出候选用户、关键假设、招募渠道、筛选标准及最小访谈或任务测试。不联系第三方；没有真人记录时交付验证计划并明确尚未验证。"},
-      {"id": "economics", "role": "commercial_analyst", "title": "比较盈利依据与验证成本", "depends": ["games", "tools", "channels", "demand"], "prompt": "比较候选方向（游戏或工具）的付费证据、同周期收入成本和最小验证投入，包括真人验证成本。保留未知数，给出情景和敏感性分析。"},
-      {"id": "evidence_audit", "role": "agent_quality", "title": "独立检查研究证据与交接", "depends": ["games", "tools", "channels", "demand", "economics"], "prompt": "抽查关键结论与来源是否相符，检查模拟被当事实、成本遗漏、重复研究和相互矛盾的建议。交付具体问题供总控裁决；只报告实际检查范围，有数据才计算协作成本。"},
-      {"id": "decision", "role": "director", "title": "形成项目候选与立项建议", "depends": ["games", "tools", "channels", "demand", "economics", "evidence_audit"], "gate": true, "prompt": "按证据推荐最多2个低成本验证对象及一个优先方向。逐项裁决证据审计发现的问题。pass 只表示研究交付可进入需求设计，不表示已盈利或已获用户验证；关键证据不足时 blocked 或 revise。"}
+      {"id": "games", "role": "market_researcher", "title": "研究海外游戏机会", "depends": [], "kinds": ["compare", "game"], "report": "游戏机会.md", "prompt": "研究最多5个适合小团队验证的海外游戏方向，按项目预算和市场约束形成有来源的机会卡。"},
+      {"id": "tools", "role": "market_researcher", "title": "研究海外工具机会", "depends": [], "kinds": ["compare", "tool"], "report": "工具机会.md", "prompt": "独立研究最多5个海外工具方向。记录具体痛点、替代方案、付费依据、竞品来源和低成本验证实验。"},
+      {"id": "channels", "role": "growth_operator", "title": "验证首批用户渠道", "depends": ["games", "tools"], "report": "首批用户渠道.md", "prompt": "检查候选机会的首批用户来源，列出具体可接触渠道、获取成本假设和验证动作。只研究和准备材料，不联系第三方。"},
+      {"id": "demand", "role": "user_researcher", "title": "核对需求证据与真人验证缺口", "depends": ["games", "tools"], "report": "需求证据与验证缺口.md", "prompt": "区分竞品评论、AI 推断和已有真实研究；列出候选用户、关键假设、招募渠道、筛选标准及最小访谈或任务测试。不联系第三方；没有真人记录时交付验证计划并明确尚未验证。"},
+      {"id": "economics", "role": "commercial_analyst", "title": "比较盈利依据与验证成本", "depends": ["games", "tools", "channels", "demand"], "report": "盈利依据与验证成本.md", "prompt": "比较候选方向（游戏或工具）的付费证据、同周期收入成本和最小验证投入，包括真人验证成本。保留未知数，给出情景和敏感性分析。"},
+      {"id": "evidence_audit", "role": "agent_quality", "title": "独立检查研究证据与交接", "depends": ["games", "tools", "channels", "demand", "economics"], "report": "证据审计.md", "prompt": "抽查关键结论与来源是否相符，检查模拟被当事实、成本遗漏、重复研究和相互矛盾的建议。交付具体问题供总控裁决；只报告实际检查范围，有数据才计算协作成本。"},
+      {"id": "decision", "role": "director", "title": "形成项目候选与立项建议", "depends": ["games", "tools", "channels", "demand", "economics", "evidence_audit"], "gate": true, "report": "立项决策.md", "prompt": "按证据推荐最多2个低成本验证对象及一个优先方向。逐项裁决证据审计发现的问题。pass 只表示研究交付可进入需求设计，不表示已盈利或已获用户验证；关键证据不足时 blocked 或 revise。"}
     ]
   },
   "product": {
-    "name": "产品定义与实验设计", "requires": "discovery",
+    "name": "产品定义与实验设计", "docs": "文档/02-产品定义", "requires": "discovery",
     "tasks": [
-      {"id": "domain", "role": "domain_expert", "title": "核对行业流程与专业约束", "depends": [], "prompt": "根据选定方向核查目标行业的流程、术语、业务规则与边界案例，给出来源及领域验收条件。无专门行业要求时说明不适用；方向不清或专业事实无法核实时列具体缺口，不能编造规则。"},
-      {"id": "requirements", "role": "product_manager", "title": "定义最小产品", "depends": ["domain"], "prompt": "依据研究结果、领域约束与项目简报，明确选定方向、用户任务、核心流程、最小范围、验收标准和停止条件。明确游戏或工具、目标购买方及本轮需要的美术和音频。若多个方向仍未选择，输出 blocked 并说明所需决策。 用职责技能中的需求模板给 AC 编号及自动/人工验证方式，订阅、账户与本地化要求仅在项目适用时纳入。"},
-      {"id": "gameplay", "role": "game_designer", "title": "定义玩法或确认不适用", "depends": ["requirements"], "kinds": ["compare", "game"], "prompt": "游戏项目设计核心循环、操作反馈与可玩原型计划；工具项目明确不适用，避免强加游戏功能。"},
-      {"id": "levels", "role": "level_designer", "title": "设计最小关卡与教学节奏", "depends": ["requirements", "gameplay"], "kinds": ["compare", "game"], "prompt": "游戏项目给出最小关卡集、教学顺序、布局、挑战和逐关验收标准，供数值与开发使用。工具项目完成不适用说明。"},
-      {"id": "balance", "role": "balance_designer", "title": "定义数值与平衡模型", "depends": ["requirements", "gameplay", "levels"], "kinds": ["compare", "game"], "prompt": "为游戏给出可实现的难度、奖励、成长及资源参数表、公式、极端情景和验证办法；模拟与真人试玩分开。工具项目完成不适用说明。"},
-      {"id": "research_plan", "role": "user_researcher", "title": "设计真实用户研究与验证", "depends": ["requirements", "domain"], "prompt": "制定筛选标准、招募材料、访谈和任务测试包，明确要推翻的假设、观察指标、成功和停止条件以及样本局限。标注每项验证应在原型、上线或增长哪个阶段完成，供阶段验收追踪。此任务准备计划，不声称已开展访谈。"},
-      {"id": "measurement", "role": "data_analyst", "title": "定义事件与实验测量口径", "depends": ["requirements", "research_plan"], "prompt": "配合研究计划定义核心事件、指标、分母、窗口、样本局限及成功和停止条件，区分定性发现与定量结论。"},
-      {"id": "positioning", "role": "product_marketer", "title": "明确定位与待验证卖点", "depends": ["requirements", "domain"], "prompt": "提炼目标受众、现有替代、具体价值与有依据的差异点，给出目标语言核心信息和验证方式。计划能力与已有能力分开，供界面和后续获客使用。"},
-      {"id": "architecture", "role": "technical_lead", "title": "制定最小技术方案", "depends": ["requirements", "domain", "gameplay", "levels", "balance", "measurement"], "prompt": "给出符合范围的技术选型、数据及接口约定、素材接入、性能预算、失败恢复和测试策略。明确实现取舍与不可遗漏的业务边界，避免为远期需求过度设计。 按 TeamFlow 模块与迁移规范核对已有工程，列实际入口、调用者、依赖和验证范围。"},
-      {"id": "security_plan", "role": "security_privacy", "title": "制定安全与隐私要求", "depends": ["requirements", "architecture", "measurement"], "prompt": "检查数据流、账户权限、支付、上传、第三方服务和依赖，按风险定义最小安全要求及可执行的验收方法。即使无用户账户也检查适用风险，指出技术方案需修改的具体部分。"},
-      {"id": "scope", "role": "director", "title": "核对产品与技术范围", "depends": ["domain", "requirements", "gameplay", "levels", "balance", "research_plan", "measurement", "positioning", "architecture", "security_plan"], "gate": true, "prompt": "确认唯一方向、适用角色、产品与技术范围、真人验证时间点、验收和实验可执行。核对技术与安全方案的一致性，有未解决冲突返回 revise。检查商业假设是否被误当事实，给出阶段结论。"}
+      {"id": "domain", "role": "domain_expert", "title": "核对行业流程与专业约束", "depends": [], "report": "领域约束.md", "prompt": "根据选定方向核查目标行业的流程、术语、业务规则与边界案例，给出来源及领域验收条件。无专门行业要求时说明不适用；方向不清或专业事实无法核实时列具体缺口，不能编造规则。"},
+      {"id": "requirements", "role": "product_manager", "title": "定义最小产品", "depends": ["domain"], "report": "需求文档.md", "prompt": "依据研究结果、领域约束与项目简报，明确选定方向、用户任务、核心流程、最小范围、验收标准和停止条件。明确游戏或工具、目标购买方及本轮需要的美术和音频。若多个方向仍未选择，输出 blocked 并说明所需决策。 用职责技能中的需求模板给 AC 编号及自动/人工验证方式，订阅、账户与本地化要求仅在项目适用时纳入。"},
+      {"id": "gameplay", "role": "game_designer", "title": "定义玩法或确认不适用", "depends": ["requirements"], "kinds": ["compare", "game"], "report": "核心玩法.md", "prompt": "游戏项目设计核心循环、操作反馈与可玩原型计划；工具项目明确不适用，避免强加游戏功能。"},
+      {"id": "levels", "role": "level_designer", "title": "设计最小关卡与教学节奏", "depends": ["requirements", "gameplay"], "kinds": ["compare", "game"], "report": "关卡设计.md", "prompt": "游戏项目给出最小关卡集、教学顺序、布局、挑战和逐关验收标准，供数值与开发使用。工具项目完成不适用说明。"},
+      {"id": "balance", "role": "balance_designer", "title": "定义数值与平衡模型", "depends": ["requirements", "gameplay", "levels"], "kinds": ["compare", "game"], "report": "数值平衡.md", "prompt": "为游戏给出可实现的难度、奖励、成长及资源参数表、公式、极端情景和验证办法；模拟与真人试玩分开。工具项目完成不适用说明。"},
+      {"id": "research_plan", "role": "user_researcher", "title": "设计真实用户研究与验证", "depends": ["requirements", "domain"], "report": "真人验证方案.md", "prompt": "制定筛选标准、招募材料、访谈和任务测试包，明确要推翻的假设、观察指标、成功和停止条件以及样本局限。标注每项验证应在原型、上线或增长哪个阶段完成，供阶段验收追踪。此任务准备计划，不声称已开展访谈。"},
+      {"id": "measurement", "role": "data_analyst", "title": "定义事件与实验测量口径", "depends": ["requirements", "research_plan"], "report": "指标口径.md", "prompt": "配合研究计划定义核心事件、指标、分母、窗口、样本局限及成功和停止条件，区分定性发现与定量结论。"},
+      {"id": "positioning", "role": "product_marketer", "title": "明确定位与待验证卖点", "depends": ["requirements", "domain"], "report": "产品定位.md", "prompt": "提炼目标受众、现有替代、具体价值与有依据的差异点，给出目标语言核心信息和验证方式。计划能力与已有能力分开，供界面和后续获客使用。"},
+      {"id": "architecture", "role": "technical_lead", "title": "制定最小技术方案", "depends": ["requirements", "domain", "gameplay", "levels", "balance", "measurement"], "report": "技术方案.md", "prompt": "给出符合范围的技术选型、数据及接口约定、素材接入、性能预算、失败恢复和测试策略。明确实现取舍与不可遗漏的业务边界，避免为远期需求过度设计。 按 TeamFlow 模块与迁移规范核对已有工程，列实际入口、调用者、依赖和验证范围。"},
+      {"id": "security_plan", "role": "security_privacy", "title": "制定安全与隐私要求", "depends": ["requirements", "architecture", "measurement"], "report": "安全与隐私方案.md", "prompt": "检查数据流、账户权限、支付、上传、第三方服务和依赖，按风险定义最小安全要求及可执行的验收方法。即使无用户账户也检查适用风险，指出技术方案需修改的具体部分。"},
+      {"id": "scope", "role": "director", "title": "核对产品与技术范围", "depends": ["domain", "requirements", "gameplay", "levels", "balance", "research_plan", "measurement", "positioning", "architecture", "security_plan"], "gate": true, "report": "范围决策.md", "prompt": "确认唯一方向、适用角色、产品与技术范围、真人验证时间点、验收和实验可执行。核对技术与安全方案的一致性，有未解决冲突返回 revise。检查商业假设是否被误当事实，给出阶段结论。"}
     ]
   },
   "design": {
-    "name": "原型、独立评审与修改", "requires": "product",
+    "name": "原型、独立评审与修改", "docs": "文档/03-设计评审", "requires": "product",
     "tasks": [
-      {"id": "art", "role": "art_director", "title": "制作美术资产与接入规范", "depends": [], "prompt": "根据已确认需求和玩法制作本轮必需美术，保存实际文件到 design/assets/art/ 并在 artifacts 列出，记录来源、授权、性能和占位状态。无专门美术需求时说明不适用；有必需需求而无法交付时 blocked。"},
-      {"id": "audio", "role": "audio_designer", "title": "制作音频素材与事件表", "depends": [], "prompt": "根据需求与玩法制作本轮必需音频，保存实际文件到 design/assets/audio/ 并在 artifacts 列出，交付触发、混音、授权和播放检查。无音频需求时说明不适用；不能用文字说明代替必需音频文件。"},
-      {"id": "prototype", "role": "ui_designer", "title": "制作可操作界面原型", "depends": ["art", "audio"], "artifact_prefix": "design/", "prompt": "按产品与技术要求制作可操作原型，保存到 design/，接入本轮适用的美术与音频交付；提供主流程、关键状态与视觉规范，实际检查渲染结果，明确占位内容。原型交付后评审期间不得修改。"},
-      {"id": "expert", "role": "reviewer_expert", "title": "资深用户独立评审", "depends": ["prototype"], "prompt": "只阅读产品要求和本次原型，独立执行任务并记录可观察的问题。不要阅读其他评审文件。所有用户动机解释标为模拟假设。"},
-      {"id": "newcomer", "role": "reviewer_newcomer", "title": "首次使用独立评审", "depends": ["prototype"], "prompt": "从第一次使用的角度评审原型，记录理解障碍和恢复路径。不要阅读其他评审文件；标记 AI 模拟。"},
-      {"id": "value", "role": "reviewer_value", "title": "付费价值独立评审", "depends": ["prototype"], "prompt": "独立检查价值表达和价格理解，不阅读其他评审意见，不编造付费意愿。"},
-      {"id": "locale", "role": "localization_specialist", "title": "目标市场本地化评审", "depends": ["prototype"], "prompt": "检查目标地区的界面文案、术语、格式和文字长度，给出替换文案及原因。"},
-      {"id": "user_validation", "role": "user_researcher", "title": "整理原型真人测试包与已有证据", "depends": ["prototype"], "prompt": "针对本版原型准备可直接执行的任务测试；分析 input/ 中有来源、注明版本的真实记录。没有记录时仅交付测试包和待验证清单，不冒充实际测试。若已确认的产品范围要求本阶段必须取得真人证据而输入缺失，返回 blocked 并指出缺项。不要读取同轮模拟评审意见。"},
-      {"id": "triage", "role": "product_manager", "title": "逐条裁决评审反馈", "depends": ["expert", "newcomer", "value", "locale", "user_validation"], "prompt": "合并去重反馈，保留真实观察与 AI 模拟的区别，逐条采纳、延期或拒绝及说明理由。给出唯一修改清单，分别标明 UI、美术、音频负责项，保留待真人验证的问题。"},
-      {"id": "art_revision", "role": "art_director", "title": "修订采纳的美术问题", "depends": ["art", "triage"], "prompt": "只修改裁决中采纳的 design/assets/art/ 美术问题，列出实际文件与前后变化；没有美术改动时说明原因，不制造额外资源。"},
-      {"id": "audio_revision", "role": "audio_designer", "title": "修订采纳的音频问题", "depends": ["audio", "triage"], "prompt": "只修改裁决中采纳的 design/assets/audio/ 音频问题，列出实际文件和播放检查；没有音频改动时说明原因。"},
-      {"id": "revision", "role": "ui_designer", "title": "修改原型并检查结果", "depends": ["prototype", "triage", "art_revision", "audio_revision"], "artifact_prefix": "design/", "prompt": "按产品裁决修改 design/ 中的原型并接入修订素材，记录前后变化及实际渲染验证，避免未采纳意见扩大范围。"},
-      {"id": "design_gate", "role": "qa_engineer", "title": "独立验收修改后的原型", "depends": ["triage", "art_revision", "audio_revision", "revision", "user_validation"], "gate": true, "prompt": "核验采纳反馈、适用素材的真实文件、核心操作和本阶段约定的真人验证条件；无真人记录时不能声称获得用户验证。缺陷阻塞时 revise，工具或必需证据不足时 blocked。未通过不能进入开发。"}
+      {"id": "art", "role": "art_director", "title": "制作美术资产与接入规范", "depends": [], "report": "美术说明.md", "outputs": ["design/art/"], "prompt": "根据已确认需求和玩法制作本轮必需美术，保存实际文件到 design/art/ 并在 artifacts 列出，记录来源、授权、性能和占位状态。无专门美术需求时说明不适用；有必需需求而无法交付时 blocked。"},
+      {"id": "audio", "role": "audio_designer", "title": "制作音频素材与事件表", "depends": [], "report": "音频说明.md", "outputs": ["design/audio/"], "prompt": "根据需求与玩法制作本轮必需音频，保存实际文件到 design/audio/ 并在 artifacts 列出，交付触发、混音、授权和播放检查。无音频需求时说明不适用；不能用文字说明代替必需音频文件。"},
+      {"id": "prototype", "role": "ui_designer", "title": "制作可操作界面原型", "depends": ["art", "audio"], "artifact_prefix": "design/prototype/", "report": "原型说明.md", "outputs": ["design/prototype/", "design/ui/"], "prompt": "按产品与技术要求制作可操作原型，保存到 design/prototype/，UI 设计稿与原型图保存到 design/ui/，接入本轮适用的美术与音频交付；提供主流程、关键状态与视觉规范，实际检查渲染结果，明确占位内容。原型交付后评审期间不得修改。"},
+      {"id": "expert", "role": "reviewer_expert", "title": "资深用户独立评审", "depends": ["prototype"], "report": "资深用户评审.md", "prompt": "只阅读产品要求和本次原型，独立执行任务并记录可观察的问题。不要阅读其他评审文件。所有用户动机解释标为模拟假设。"},
+      {"id": "newcomer", "role": "reviewer_newcomer", "title": "首次使用独立评审", "depends": ["prototype"], "report": "新用户评审.md", "prompt": "从第一次使用的角度评审原型，记录理解障碍和恢复路径。不要阅读其他评审文件；标记 AI 模拟。"},
+      {"id": "value", "role": "reviewer_value", "title": "付费价值独立评审", "depends": ["prototype"], "report": "付费价值评审.md", "prompt": "独立检查价值表达和价格理解，不阅读其他评审意见，不编造付费意愿。"},
+      {"id": "locale", "role": "localization_specialist", "title": "目标市场本地化评审", "depends": ["prototype"], "report": "本地化检查.md", "prompt": "检查目标地区的界面文案、术语、格式和文字长度，给出替换文案及原因。"},
+      {"id": "user_validation", "role": "user_researcher", "title": "整理原型真人测试包与已有证据", "depends": ["prototype"], "report": "真人测试包.md", "prompt": "针对本版原型准备可直接执行的任务测试；分析 input/ 中有来源、注明版本的真实记录。没有记录时仅交付测试包和待验证清单，不冒充实际测试。若已确认的产品范围要求本阶段必须取得真人证据而输入缺失，返回 blocked 并指出缺项。不要读取同轮模拟评审意见。"},
+      {"id": "triage", "role": "product_manager", "title": "逐条裁决评审反馈", "depends": ["expert", "newcomer", "value", "locale", "user_validation"], "report": "评审裁决.md", "prompt": "合并去重反馈，保留真实观察与 AI 模拟的区别，逐条采纳、延期或拒绝及说明理由。给出唯一修改清单，分别标明 UI、美术、音频负责项，保留待真人验证的问题。"},
+      {"id": "art_revision", "role": "art_director", "title": "修订采纳的美术问题", "depends": ["art", "triage"], "report": "美术修订.md", "outputs": ["design/art/"], "prompt": "只修改裁决中采纳的 design/art/ 美术问题，列出实际文件与前后变化；没有美术改动时说明原因，不制造额外资源。"},
+      {"id": "audio_revision", "role": "audio_designer", "title": "修订采纳的音频问题", "depends": ["audio", "triage"], "report": "音频修订.md", "outputs": ["design/audio/"], "prompt": "只修改裁决中采纳的 design/audio/ 音频问题，列出实际文件和播放检查；没有音频改动时说明原因。"},
+      {"id": "revision", "role": "ui_designer", "title": "修改原型并检查结果", "depends": ["prototype", "triage", "art_revision", "audio_revision"], "artifact_prefix": "design/prototype/", "report": "原型修订.md", "outputs": ["design/prototype/", "design/ui/"], "prompt": "按产品裁决修改 design/prototype/ 与 design/ui/ 中的原型和设计稿并接入修订素材，记录前后变化及实际渲染验证，避免未采纳意见扩大范围。"},
+      {"id": "design_gate", "role": "qa_engineer", "title": "独立验收修改后的原型", "depends": ["triage", "art_revision", "audio_revision", "revision", "user_validation"], "gate": true, "report": "设计验收.md", "prompt": "核验采纳反馈、适用素材的真实文件、核心操作和本阶段约定的真人验证条件；无真人记录时不能声称获得用户验证。缺陷阻塞时 revise，工具或必需证据不足时 blocked。未通过不能进入开发。"}
     ]
   },
   "build": {
-    "name": "开发、测试与修复", "requires": "design",
+    "name": "开发、测试与修复", "docs": "文档/04-开发验收", "requires": "design",
     "tasks": [
-      {"id": "implementation", "role": "developer", "title": "实现可运行的最小产品", "depends": [], "artifact_prefix": "app/", "prompt": "依据已确认产品、技术方案、安全要求与原型开发 app/，接入适用的美术、音频、关卡、数值及指标。交付运行说明和必要测试，执行实际检查，不发布生产、不创建付费资源。 先读所绑定开发技能，按实际技术栈使用编码、生命周期、日志与本地化规范；适用购买功能须交付权益状态及测试证据。"},
-      {"id": "test", "role": "qa_engineer", "title": "独立测试与缺陷报告", "depends": ["implementation"], "prompt": "独立核对验收标准，运行可用的测试及操作检查，记录缺陷与未验证范围。本任务可完成缺陷报告，下游工程师据此修复。"},
-      {"id": "code_review", "role": "technical_lead", "title": "独立审查代码与架构实现", "depends": ["implementation"], "prompt": "检查实际代码、数据及接口边界、错误恢复、性能和维护风险，交付文件位置、触发条件、影响及修复建议。这是供修复的初审报告，报告完成不代表代码通过最终验收。"},
-      {"id": "security_review", "role": "security_privacy", "title": "独立检查安全与隐私实现", "depends": ["implementation"], "prompt": "对照已确认安全要求检查本地实现与测试证据，记录可复现问题、严重性及修复方案。这是供开发修复的初审报告，不测试未授权第三方环境。"},
-      {"id": "fix", "role": "developer", "title": "修复测试、代码及安全问题", "depends": ["implementation", "test", "code_review", "security_review"], "prompt": "逐项处理 QA、技术和安全初审发现的问题，记录修复位置与实际回归结果；有分歧说明证据，不自行宣布独立验收通过。没有问题时不做无关修改。"},
-      {"id": "code_gate", "role": "technical_lead", "title": "复核代码问题与技术验收", "depends": ["code_review", "fix"], "gate": true, "prompt": "检查修复后的实际代码与必要测试，逐项复核技术问题和回归风险。阻塞问题未解决返回 revise，缺必需验证能力 blocked，实际通过才 pass。"},
-      {"id": "security_gate", "role": "security_privacy", "title": "复核安全与隐私验收", "depends": ["security_review", "fix"], "gate": true, "prompt": "独立核对安全修复、适用的数据和权限边界及残余风险。阻塞风险未解决返回 revise，缺必需环境 blocked，实际验证通过才 pass；不得用不适用绕过适用检查。"},
-      {"id": "acceptance", "role": "qa_engineer", "title": "独立回归验收", "depends": ["test", "fix", "code_gate", "security_gate"], "gate": true, "prompt": "在技术与安全复核通过后重新核对核心任务、素材接入、关卡与数值要求和关键异常。存在阻塞缺陷返回 revise，环境缺失返回 blocked，实际验收通过才 pass。 将 AC 对应到修复后版本和实际证据，明确人工条件与自动检查，不能用旧版本成功记录直接放行。"}
+      {"id": "implementation", "role": "developer", "title": "实现可运行的最小产品", "depends": [], "artifact_prefix": "app/", "report": "开发说明.md", "outputs": ["app/"], "prompt": "依据已确认产品、技术方案、安全要求与原型开发 app/，接入适用的美术、音频、关卡、数值及指标。交付运行说明和必要测试，执行实际检查，不发布生产、不创建付费资源。 先读所绑定开发技能，按实际技术栈使用编码、生命周期、日志与本地化规范；适用购买功能须交付权益状态及测试证据。"},
+      {"id": "test", "role": "qa_engineer", "title": "独立测试与缺陷报告", "depends": ["implementation"], "report": "测试报告.md", "outputs": ["app/"], "prompt": "独立核对验收标准，运行可用的测试及操作检查，记录缺陷与未验证范围。本任务可完成缺陷报告，下游工程师据此修复。"},
+      {"id": "code_review", "role": "technical_lead", "title": "独立审查代码与架构实现", "depends": ["implementation"], "report": "代码审查.md", "prompt": "检查实际代码、数据及接口边界、错误恢复、性能和维护风险，交付文件位置、触发条件、影响及修复建议。这是供修复的初审报告，报告完成不代表代码通过最终验收。"},
+      {"id": "security_review", "role": "security_privacy", "title": "独立检查安全与隐私实现", "depends": ["implementation"], "report": "安全审查.md", "prompt": "对照已确认安全要求检查本地实现与测试证据，记录可复现问题、严重性及修复方案。这是供开发修复的初审报告，不测试未授权第三方环境。"},
+      {"id": "fix", "role": "developer", "title": "修复测试、代码及安全问题", "depends": ["implementation", "test", "code_review", "security_review"], "report": "修复记录.md", "outputs": ["app/"], "prompt": "逐项处理 QA、技术和安全初审发现的问题，记录修复位置与实际回归结果；有分歧说明证据，不自行宣布独立验收通过。没有问题时不做无关修改。"},
+      {"id": "code_gate", "role": "technical_lead", "title": "复核代码问题与技术验收", "depends": ["code_review", "fix"], "gate": true, "report": "代码复核.md", "prompt": "检查修复后的实际代码与必要测试，逐项复核技术问题和回归风险。阻塞问题未解决返回 revise，缺必需验证能力 blocked，实际通过才 pass。"},
+      {"id": "security_gate", "role": "security_privacy", "title": "复核安全与隐私验收", "depends": ["security_review", "fix"], "gate": true, "report": "安全复核.md", "prompt": "独立核对安全修复、适用的数据和权限边界及残余风险。阻塞风险未解决返回 revise，缺必需环境 blocked，实际验证通过才 pass；不得用不适用绕过适用检查。"},
+      {"id": "acceptance", "role": "qa_engineer", "title": "独立回归验收", "depends": ["test", "fix", "code_gate", "security_gate"], "gate": true, "report": "开发验收.md", "prompt": "在技术与安全复核通过后重新核对核心任务、素材接入、关卡与数值要求和关键异常。存在阻塞缺陷返回 revise，环境缺失返回 blocked，实际验收通过才 pass。 将 AC 对应到修复后版本和实际证据，明确人工条件与自动检查，不能用旧版本成功记录直接放行。"}
     ]
   },
   "launch": {
-    "name": "上线准备与运营方案", "requires": "build",
+    "name": "上线准备与运营方案", "docs": "文档/05-上线准备", "requires": "build",
     "tasks": [
-      {"id": "release", "role": "release_engineer", "title": "准备发布与恢复方案", "depends": [], "prompt": "检查当前构建、环境依赖、配置、素材来源、监控和回滚；生成发布操作方案。当前工作流只做准备，不执行生产发布。 按发布技能核对指定 build、商店资料、适用隐私/SDK 与订阅配置；区分准备、上传、分发、提审和发布。"},
-      {"id": "marketing", "role": "product_marketer", "title": "准备产品营销与商店内容", "depends": [], "prompt": "依据已实现版本交付定位、核心卖点、目标语言落地页或商店页文案、演示脚本与宣传资产清单。检查卖点是否有实际能力支持，明确已完成素材与待制作项，不虚构用户评价。"},
-      {"id": "sales", "role": "sales_business", "title": "准备企业销售或合作试点", "depends": ["marketing"], "prompt": "有企业购买方或明确合作渠道时准备客户筛选、采购流程、演示材料和试点成功标准，注明定价假设和真实商机来源。不联系第三方、不作合同承诺；纯消费者自助产品无合作需求时说明不适用。"},
-      {"id": "support", "role": "customer_success", "title": "准备入门与客户支持", "depends": ["marketing"], "prompt": "依据实际产品准备目标语言入门步骤、帮助内容、已知问题、支持分级和升级路径，定义上线后收集激活障碍、退款及流失原因的方法。仅交付草稿，不联系用户或修改账户。"},
-      {"id": "campaign", "role": "growth_operator", "title": "准备首轮获客实验与素材", "depends": ["marketing", "sales"], "prompt": "将产品营销材料适配首批用户渠道，结合适用的销售试点交付获客实验、当地语言内容、预算、指标和停止条件。未授权时不对外发布或投放。"},
-      {"id": "copy", "role": "localization_specialist", "title": "核对上线、销售与支持文案", "depends": ["marketing", "sales", "support", "campaign"], "prompt": "核对上线、推广、适用的销售和帮助文案，检查目标地区语言与产品事实，给出最终建议文案。"},
-      {"id": "delivery_audit", "role": "agent_quality", "title": "审计上线交接与证据完整性", "depends": ["release", "marketing", "sales", "support", "campaign", "copy"], "prompt": "检查当前上线交付和前置阶段记录是否完整一致、代码与安全复核是否对应当前版本、模拟与真人证据是否区分、关键结论是否可追溯。指出缺失或仍待制作的素材、无人负责的问题、记忆建议与资源未知项，不修改状态或配置。 核查角色技能使用、AC 与证据版本、交接路径和未决负责人；技能内容更新不等于旧阶段已重新执行。"},
-      {"id": "launch_gate", "role": "director", "title": "汇总上线准备状态", "depends": ["release", "marketing", "sales", "support", "campaign", "copy", "delivery_audit"], "gate": true, "prompt": "逐项核对审计问题、素材、支持和适用销售准备，检查产品阶段约定的上线前真人验证证据；必需项未满足不得 pass。列出准备完成与缺失项。pass 仅代表上线准备完成，不能声称已经上线。需要的账号、环境和用户授权写清楚。"}
+      {"id": "release", "role": "release_engineer", "title": "准备发布与恢复方案", "depends": [], "report": "发布方案.md", "outputs": ["release/"], "prompt": "检查当前构建、环境依赖、配置、素材来源、监控和回滚；生成发布操作方案。当前工作流只做准备，不执行生产发布。 按发布技能核对指定 build、商店资料、适用隐私/SDK 与订阅配置；区分准备、上传、分发、提审和发布。"},
+      {"id": "marketing", "role": "product_marketer", "title": "准备产品营销与商店内容", "depends": [], "report": "营销方案.md", "outputs": ["store/"], "prompt": "依据已实现版本交付定位、核心卖点、目标语言落地页或商店页文案、演示脚本与宣传资产清单。检查卖点是否有实际能力支持，明确已完成素材与待制作项，不虚构用户评价。"},
+      {"id": "sales", "role": "sales_business", "title": "准备企业销售或合作试点", "depends": ["marketing"], "report": "销售与合作方案.md", "prompt": "有企业购买方或明确合作渠道时准备客户筛选、采购流程、演示材料和试点成功标准，注明定价假设和真实商机来源。不联系第三方、不作合同承诺；纯消费者自助产品无合作需求时说明不适用。"},
+      {"id": "support", "role": "customer_success", "title": "准备入门与客户支持", "depends": ["marketing"], "report": "支持方案.md", "outputs": ["support/"], "prompt": "依据实际产品准备目标语言入门步骤、帮助内容、已知问题、支持分级和升级路径，定义上线后收集激活障碍、退款及流失原因的方法。仅交付草稿，不联系用户或修改账户。"},
+      {"id": "campaign", "role": "growth_operator", "title": "准备首轮获客实验与素材", "depends": ["marketing", "sales"], "report": "获客实验.md", "outputs": ["marketing/"], "prompt": "将产品营销材料适配首批用户渠道，结合适用的销售试点交付获客实验、当地语言内容、预算、指标和停止条件。未授权时不对外发布或投放。"},
+      {"id": "copy", "role": "localization_specialist", "title": "核对上线、销售与支持文案", "depends": ["marketing", "sales", "support", "campaign"], "report": "文案终稿.md", "outputs": ["store/"], "prompt": "核对上线、推广、适用的销售和帮助文案，检查目标地区语言与产品事实，给出最终建议文案。"},
+      {"id": "delivery_audit", "role": "agent_quality", "title": "审计上线交接与证据完整性", "depends": ["release", "marketing", "sales", "support", "campaign", "copy"], "report": "交付审计.md", "prompt": "检查当前上线交付和前置阶段记录是否完整一致、代码与安全复核是否对应当前版本、模拟与真人证据是否区分、关键结论是否可追溯。指出缺失或仍待制作的素材、无人负责的问题、记忆建议与资源未知项，不修改状态或配置。 核查角色技能使用、AC 与证据版本、交接路径和未决负责人；技能内容更新不等于旧阶段已重新执行。"},
+      {"id": "launch_gate", "role": "director", "title": "汇总上线准备状态", "depends": ["release", "marketing", "sales", "support", "campaign", "copy", "delivery_audit"], "gate": true, "report": "上线验收.md", "prompt": "逐项核对审计问题、素材、支持和适用销售准备，检查产品阶段约定的上线前真人验证证据；必需项未满足不得 pass。列出准备完成与缺失项。pass 仅代表上线准备完成，不能声称已经上线。需要的账号、环境和用户授权写清楚。"}
     ]
   },
   "growth": {
-    "name": "真实数据驱动的运营迭代", "requires": "launch",
+    "name": "真实数据驱动的运营迭代", "docs": "文档/06-运营迭代", "requires": "launch",
     "tasks": [
-      {"id": "analysis", "role": "data_analyst", "title": "分析真实用户与收入数据", "depends": [], "prompt": "读取 input/ 中的真实数据、来源说明和上线记录。无真实数据或上线记录时 blocked，列出所需数据；不产生示例经营结论。"},
-      {"id": "support_feedback", "role": "customer_success", "title": "整理真实支持与流失反馈", "depends": ["analysis"], "prompt": "分析 input/ 中有来源的工单、入门障碍、退款和流失记录，形成问题分级与改进建议。没有支持记录时交付采集缺口，不伪造记录或把没有记录理解为没有问题。"},
-      {"id": "research_followup", "role": "user_researcher", "title": "结合真实反馈更新验证计划", "depends": ["analysis", "support_feedback"], "prompt": "核对有来源的访谈、试玩和支持证据，区分观察与动机推断，更新关键假设、访谈任务和验证优先级。缺少真人研究记录时明确尚未验证并准备下一轮研究材料，不代替真实访谈。"},
-      {"id": "next_experiment", "role": "growth_operator", "title": "设计下一轮运营实验", "depends": ["analysis", "support_feedback", "research_followup"], "prompt": "根据实际数据与反馈选择最有价值的一个增长实验，给出材料、预算、测量窗口和停止条件。"},
-      {"id": "product_iteration", "role": "product_manager", "title": "决定产品迭代范围", "depends": ["analysis", "support_feedback", "research_followup", "next_experiment"], "prompt": "把真实数据与反馈转成最小迭代范围，区分运营问题与产品问题，记录采纳和拒绝原因，以及需要哪些专门角色处理。"},
-      {"id": "team_review", "role": "agent_quality", "title": "评估本轮协作与知识保存", "depends": ["analysis", "support_feedback", "research_followup", "next_experiment", "product_iteration"], "prompt": "检查本轮证据链、重复工作、交接遗漏与关键决策，提出给总控保存的记忆建议和一项优先流程改进。有真实用量和时长才统计协作成本，不能推算虚假精确费用。"},
-      {"id": "continue_gate", "role": "director", "title": "决定继续、修改或停止", "depends": ["analysis", "support_feedback", "research_followup", "next_experiment", "product_iteration", "team_review"], "gate": true, "prompt": "检查实验、真实证据与协作评估，给出继续、修改或停止建议，指出下一轮需要进入 design、build 或 growth；列出应由总控保存的已确认记忆和流程改进，保留未验证假设。"}
+      {"id": "analysis", "role": "data_analyst", "title": "分析真实用户与收入数据", "depends": [], "report": "数据分析.md", "prompt": "读取 input/ 中的真实数据、来源说明和上线记录。无真实数据或上线记录时 blocked，列出所需数据；不产生示例经营结论。"},
+      {"id": "support_feedback", "role": "customer_success", "title": "整理真实支持与流失反馈", "depends": ["analysis"], "report": "支持反馈分析.md", "prompt": "分析 input/ 中有来源的工单、入门障碍、退款和流失记录，形成问题分级与改进建议。没有支持记录时交付采集缺口，不伪造记录或把没有记录理解为没有问题。"},
+      {"id": "research_followup", "role": "user_researcher", "title": "结合真实反馈更新验证计划", "depends": ["analysis", "support_feedback"], "report": "研究跟进.md", "prompt": "核对有来源的访谈、试玩和支持证据，区分观察与动机推断，更新关键假设、访谈任务和验证优先级。缺少真人研究记录时明确尚未验证并准备下一轮研究材料，不代替真实访谈。"},
+      {"id": "next_experiment", "role": "growth_operator", "title": "设计下一轮运营实验", "depends": ["analysis", "support_feedback", "research_followup"], "report": "下一轮实验.md", "prompt": "根据实际数据与反馈选择最有价值的一个增长实验，给出材料、预算、测量窗口和停止条件。"},
+      {"id": "product_iteration", "role": "product_manager", "title": "决定产品迭代范围", "depends": ["analysis", "support_feedback", "research_followup", "next_experiment"], "report": "迭代范围.md", "prompt": "把真实数据与反馈转成最小迭代范围，区分运营问题与产品问题，记录采纳和拒绝原因，以及需要哪些专门角色处理。"},
+      {"id": "team_review", "role": "agent_quality", "title": "评估本轮协作与知识保存", "depends": ["analysis", "support_feedback", "research_followup", "next_experiment", "product_iteration"], "report": "协作复盘.md", "prompt": "检查本轮证据链、重复工作、交接遗漏与关键决策，提出给总控保存的记忆建议和一项优先流程改进。有真实用量和时长才统计协作成本，不能推算虚假精确费用。"},
+      {"id": "continue_gate", "role": "director", "title": "决定继续、修改或停止", "depends": ["analysis", "support_feedback", "research_followup", "next_experiment", "product_iteration", "team_review"], "gate": true, "report": "继续决策.md", "prompt": "检查实验、真实证据与协作评估，给出继续、修改或停止建议，指出下一轮需要进入 design、build 或 growth；列出应由总控保存的已确认记忆和流程改进，保留未验证假设。"}
     ]
   }
 }

@@ -1,4 +1,5 @@
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -66,6 +67,24 @@ class InstallTests(unittest.TestCase):
         self.assertFalse((self.project / ".agentworks").exists())
         self.assertFalse((self.project / "AGENTS.md").exists())
 
+    def test_migrates_old_project_files_and_refuses_upgrade_during_running_task(self):
+        install(self.project)
+        legacy = self.project / ".agentworks/projects/game"
+        (legacy / "input").mkdir(parents=True)
+        (legacy / "BRIEF.md").write_text("# 旧简报", encoding="utf-8")
+        (legacy / "MEMORY.md").write_text("# 旧记忆", encoding="utf-8")
+        (legacy / "input/README.md").write_text("说明", encoding="utf-8")
+        changed = install(self.project)["changed"]
+        self.assertEqual((self.project / "文档/项目简报.md").read_text(encoding="utf-8"), "# 旧简报")
+        self.assertTrue((self.project / "文档/输入资料/README.md").is_file())
+        self.assertFalse((legacy / "BRIEF.md").exists())
+        self.assertTrue(any("项目记忆.md" in name for name in changed))
+        shutil.rmtree(self.project / "文档")
+        subprocess.run([sys.executable, "-c", EMBEDDED_RUN], cwd=self.project, capture_output=True, check=True)
+        with self.assertRaises(WorksError) as raised:
+            install(self.project)
+        self.assertIn("正在执行", str(raised.exception))
+
     def test_refuses_source_repository(self):
         with self.assertRaises(WorksError):
             install(Path(__file__).resolve().parents[1])
@@ -83,13 +102,15 @@ class InstallTests(unittest.TestCase):
         self.assertIn("本仓库已绑定项目 cleaner", data["second"])
         self.assertIn(str(self.project.resolve() / ".agents/skills/agentworks-market-researcher/SKILL.md"), data["prompt"])
         meta = self.project / ".agentworks/projects/cleaner"
-        self.assertTrue((meta / "BRIEF.md").is_file())
+        self.assertTrue((self.project / "文档/项目简报.md").is_file())
+        self.assertTrue((self.project / "文档/项目记忆.md").is_file())
+        self.assertFalse((meta / "BRIEF.md").exists())
         self.assertTrue(list((meta / "runs/1").glob("*-prompt.txt")))
         self.assertTrue((self.project / ".git").is_dir())
-        ignored = subprocess.run(["git", "check-ignore", ".agentworks/locks/cleaner.lock", ".agentworks/state.sqlite3",
-                                  ".agentworks/projects/cleaner/input/README.md"],
+        ignored = subprocess.run(["git", "-c", "core.quotepath=false", "check-ignore", ".agentworks/locks/cleaner.lock", ".agentworks/state.sqlite3",
+                                  "文档/输入资料/README.md", "文档/输入资料/interview.csv"],
                                  cwd=self.project, capture_output=True, text=True).stdout.split()
-        self.assertEqual(ignored, [".agentworks/locks/cleaner.lock"])
+        self.assertEqual(ignored, [".agentworks/locks/cleaner.lock", "文档/输入资料/interview.csv"])
 
 
 if __name__ == "__main__":

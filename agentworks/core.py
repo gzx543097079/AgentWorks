@@ -17,6 +17,10 @@ SKILLS_ROOT = PRODUCT_ROOT or ROOT
 
 
 KINDS = ("compare", "game", "tool")
+# Embedded mode keeps the project's own knowledge in its 文档/ folder.
+DOCS = "文档"
+EMBEDDED_META = {"brief": "项目简报.md", "memory": "项目记忆.md", "input": "输入资料"}
+LEGACY_META = {"brief": "BRIEF.md", "memory": "MEMORY.md", "input": "input"}
 
 
 class WorksError(Exception):
@@ -53,6 +57,14 @@ def within(root, name):
     return path
 
 
+def relative_dir(value, label):
+    path = Path(value) if isinstance(value, str) else None
+    if (path is None or not value or path.is_absolute() or ".." in path.parts
+            or path.parts[0] in (".agentworks", ".git")):
+        raise WorksError("产出路径必须是项目内的相对路径：" + label)
+    return value
+
+
 def load_config():
     from .skills import role_skills
     team = read_json(ROOT / "config/team.json")
@@ -69,8 +81,15 @@ def load_config():
         except ValueError as exc:
             raise WorksError(str(exc)) from exc
     for phase, flow in flows.items():
-        seen = set()
+        seen, names = set(), set()
+        relative_dir(flow.get("docs"), phase)
         for task in flow["tasks"]:
+            report = task.get("report")
+            if not isinstance(report, str) or not report.endswith(".md") or "/" in report or report in names:
+                raise WorksError("每个任务须有阶段内唯一的报告文件名：" + phase + "/" + task["id"])
+            names.add(report)
+            for folder in task.get("outputs", []):
+                relative_dir(folder, phase + "/" + task["id"])
             if task["id"] in seen or task["role"] not in roles or not set(task["depends"]) <= seen:
                 raise WorksError("工作流角色、任务顺序或依赖无效：" + phase)
             if "kinds" in task and (task.get("gate") or not task["kinds"] or not set(task["kinds"]) <= set(KINDS)):
@@ -139,9 +158,12 @@ class Store:
         return self.product_root or self.home / "projects" / project / "workspace"
 
     def meta(self, project):
-        """Folder holding BRIEF.md, MEMORY.md and input/."""
+        """Folder holding the brief, memory and input materials."""
         self.project(project)
-        return self.home / "projects" / project if self.product_root else self.workspace(project)
+        return self.product_root / DOCS if self.product_root else self.workspace(project)
+
+    def meta_file(self, project, key):
+        return self.meta(project) / (EMBEDDED_META if self.product_root else LEGACY_META)[key]
 
     @contextlib.contextmanager
     def lock(self, project):
@@ -181,10 +203,12 @@ class Store:
                     existing = db.execute("SELECT id FROM projects LIMIT 1").fetchone()
                     if existing:
                         raise WorksError("本仓库已绑定项目 " + existing["id"] + "；一个产品仓库只对应一个项目。")
-                    workspace = self.home / "projects" / project
-                    if workspace.exists():
+                    if (self.home / "projects" / project).exists():
                         raise WorksError("已有同名项目资料，请保留内容后使用不同项目编号。")
-                    workspace.mkdir(parents=True)
+                    workspace, names = self.product_root / DOCS, EMBEDDED_META
+                    if (workspace / names["brief"]).exists() or (workspace / names["memory"]).exists():
+                        raise WorksError("项目文档中已有简报或记忆，请保留内容后再创建。")
+                    (self.home / "projects" / project).mkdir(parents=True)
                     if not (self.product_root / ".git").exists():
                         subprocess.run(["git", "init", "--quiet", str(self.product_root)], check=True, capture_output=True)
                 else:
@@ -194,13 +218,14 @@ class Store:
                     workspace.mkdir(parents=True)
                     # Keep product files inside their own Git workspace boundary.
                     subprocess.run(["git", "init", "--quiet", str(workspace)], check=True, capture_output=True)
-                (workspace / "input").mkdir()
-                (workspace / "BRIEF.md").write_text(
+                    names = LEGACY_META
+                (workspace / names["input"]).mkdir(parents=True, exist_ok=True)
+                (workspace / names["brief"]).write_text(
                     "# " + title + "\n\n项目类型：" + kind + "\n目标市场：" + market +
                     "\n\n## 用户提供的目标与约束\n" + (brief or "尚未补充具体预算、选题或时间约束；研究时保留未知。") +
                     "\n\n## 已选择的方向\n待研究后记录。\n\n## 授权范围\n研究、设计和本地开发；对外操作按用户后续明确授权。\n", encoding="utf-8")
-                (workspace / "MEMORY.md").write_text("# 项目长期记忆\n\n只记录已确认的偏好、决策及理由，并注明日期和来源。\n", encoding="utf-8")
-                (workspace / "input/README.md").write_text("# 输入资料\n\n放入真实用户反馈、竞品资料或经营数据，并附来源、日期和字段说明。AI模拟结果不得标作真实数据。\n", encoding="utf-8")
+                (workspace / names["memory"]).write_text("# 项目长期记忆\n\n只记录已确认的偏好、决策及理由，并注明日期和来源。\n", encoding="utf-8")
+                (workspace / names["input"] / "README.md").write_text("# 输入资料\n\n放入真实用户反馈、竞品资料或经营数据，并附来源、日期和字段说明。AI模拟结果不得标作真实数据。\n", encoding="utf-8")
                 db.execute("INSERT INTO projects VALUES(?,?,?,?,?)", (project, title, kind, market, now()))
                 self.event(db, project, "created", title)
         return self.project(project)
@@ -354,7 +379,7 @@ class Store:
             return [dict(row) for row in db.execute("SELECT * FROM events WHERE project=? ORDER BY id", (project,))]
 
 
-def validate_result(result, workspace, spec=None):
+def validate_result(result, workspace, spec=None, dirs=None):
     required = {"status", "summary", "report", "verdict", "evidence", "artifacts", "next_actions"}
     if not isinstance(result, dict) or set(result) != required:
         raise WorksError("结果字段不符合交付格式。")
@@ -375,6 +400,10 @@ def validate_result(result, workspace, spec=None):
     for name in result["artifacts"]:
         if Path(name).is_absolute() or not within(workspace, name).is_file():
             raise WorksError("交付文件不存在或越过项目边界：" + name)
+        if Path(name).parts[0] in (".agentworks", ".git"):
+            raise WorksError("交付文件应放在项目目录中，而不是工具内部目录：" + name)
+        if dirs and not any(within(workspace, d) in within(workspace, name).parents for d in dirs):
+            raise WorksError("交付文件应放在本任务的输出目录（" + "、".join(dirs) + "）：" + name)
     prefix = (spec or {}).get("artifact_prefix")
     if result["status"] == "completed" and prefix:
         folder = within(workspace, prefix)

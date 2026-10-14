@@ -18,13 +18,14 @@ def placement(store, project, task):
     """Where a task's report lands in the project, and which folders the task may write."""
     run = next(r for r in store.runs(project) if r["id"] == task["run"])
     flow, spec = json.loads(run["config"])["flow"], task["spec"]
+    current = read_json(ROOT / "config/workflows.json").get(run["phase"], {})
     if "report" not in spec or "docs" not in flow:
         # Stages planned before 1.2.0 take their locations from the current workflow.
-        flow = read_json(ROOT / "config/workflows.json").get(run["phase"], {})
-        spec = next((t for t in flow.get("tasks", []) if t["id"] == spec["id"]), None)
+        flow, spec = current, next((t for t in current.get("tasks", []) if t["id"] == spec["id"]), None)
         if spec is None:
             return None
-    docs = flow["docs"].rstrip("/") + "/"
+    # Folder names follow the current workflow, so stages planned under 1.2.0 move with an upgrade.
+    docs = current.get("docs", flow["docs"]).rstrip("/") + "/"
     return {"report": docs + spec["report"], "dirs": [docs] + spec.get("outputs", [])}
 
 

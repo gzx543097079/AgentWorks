@@ -75,15 +75,32 @@ class InstallTests(unittest.TestCase):
         (legacy / "MEMORY.md").write_text("# 旧记忆", encoding="utf-8")
         (legacy / "input/README.md").write_text("说明", encoding="utf-8")
         changed = install(self.project)["changed"]
-        self.assertEqual((self.project / "文档/项目简报.md").read_text(encoding="utf-8"), "# 旧简报")
-        self.assertTrue((self.project / "文档/输入资料/README.md").is_file())
+        self.assertEqual((self.project / "docs/项目简报.md").read_text(encoding="utf-8"), "# 旧简报")
+        self.assertTrue((self.project / "docs/inputs/README.md").is_file())
         self.assertFalse((legacy / "BRIEF.md").exists())
         self.assertTrue(any("项目记忆.md" in name for name in changed))
-        shutil.rmtree(self.project / "文档")
+        shutil.rmtree(self.project / "docs")
         subprocess.run([sys.executable, "-c", EMBEDDED_RUN], cwd=self.project, capture_output=True, check=True)
         with self.assertRaises(WorksError) as raised:
             install(self.project)
         self.assertIn("正在执行", str(raised.exception))
+
+    def test_moves_chinese_folders_from_1_2_0_into_english_docs(self):
+        install(self.project)
+        old = self.project / "文档"
+        (old / "01-机会研究").mkdir(parents=True)
+        (old / "输入资料").mkdir()
+        (old / "01-机会研究/游戏机会.md").write_text("# 游戏机会", encoding="utf-8")
+        (old / "输入资料/访谈.csv").write_text("a,b", encoding="utf-8")
+        (old / "项目简报.md").write_text("# 旧简报", encoding="utf-8")
+        (self.project / "docs").mkdir()
+        (self.project / "docs/项目简报.md").write_text("# 已有简报", encoding="utf-8")
+        install(self.project)
+        self.assertEqual((self.project / "docs/01-discovery/游戏机会.md").read_text(encoding="utf-8"), "# 游戏机会")
+        self.assertTrue((self.project / "docs/inputs/访谈.csv").is_file())
+        # Existing files are never replaced; the old copy stays for the user to merge.
+        self.assertEqual((self.project / "docs/项目简报.md").read_text(encoding="utf-8"), "# 已有简报")
+        self.assertEqual([p.name for p in old.iterdir()], ["项目简报.md"])
 
     def test_refuses_source_repository(self):
         with self.assertRaises(WorksError):
@@ -102,15 +119,15 @@ class InstallTests(unittest.TestCase):
         self.assertIn("本仓库已绑定项目 cleaner", data["second"])
         self.assertIn(str(self.project.resolve() / ".agents/skills/agentworks-market-researcher/SKILL.md"), data["prompt"])
         meta = self.project / ".agentworks/projects/cleaner"
-        self.assertTrue((self.project / "文档/项目简报.md").is_file())
-        self.assertTrue((self.project / "文档/项目记忆.md").is_file())
+        self.assertTrue((self.project / "docs/项目简报.md").is_file())
+        self.assertTrue((self.project / "docs/项目记忆.md").is_file())
         self.assertFalse((meta / "BRIEF.md").exists())
         self.assertTrue(list((meta / "runs/1").glob("*-prompt.txt")))
         self.assertTrue((self.project / ".git").is_dir())
         ignored = subprocess.run(["git", "-c", "core.quotepath=false", "check-ignore", ".agentworks/locks/cleaner.lock", ".agentworks/state.sqlite3",
-                                  "文档/输入资料/README.md", "文档/输入资料/interview.csv"],
+                                  "docs/inputs/README.md", "docs/inputs/interview.csv"],
                                  cwd=self.project, capture_output=True, text=True).stdout.split()
-        self.assertEqual(ignored, [".agentworks/locks/cleaner.lock", "文档/输入资料/interview.csv"])
+        self.assertEqual(ignored, [".agentworks/locks/cleaner.lock", "docs/inputs/interview.csv"])
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 {
   "discovery": {
-    "name": "机会研究与比较", "docs": "文档/01-机会研究", "requires": null,
+    "name": "机会研究与比较", "docs": "docs/01-discovery", "requires": null,
     "tasks": [
       {"id": "games", "role": "market_researcher", "title": "研究海外游戏机会", "depends": [], "kinds": ["compare", "game"], "report": "游戏机会.md", "prompt": "研究最多5个适合小团队验证的海外游戏方向，按项目预算和市场约束形成有来源的机会卡。"},
       {"id": "tools", "role": "market_researcher", "title": "研究海外工具机会", "depends": [], "kinds": ["compare", "tool"], "report": "工具机会.md", "prompt": "独立研究最多5个海外工具方向。记录具体痛点、替代方案、付费依据、竞品来源和低成本验证实验。"},
@@ -12,7 +12,7 @@
     ]
   },
   "product": {
-    "name": "产品定义与实验设计", "docs": "文档/02-产品定义", "requires": "discovery",
+    "name": "产品定义与实验设计", "docs": "docs/02-product", "requires": "discovery",
     "tasks": [
       {"id": "domain", "role": "domain_expert", "title": "核对行业流程与专业约束", "depends": [], "report": "领域约束.md", "prompt": "根据选定方向核查目标行业的流程、术语、业务规则与边界案例，给出来源及领域验收条件。无专门行业要求时说明不适用；方向不清或专业事实无法核实时列具体缺口，不能编造规则。"},
       {"id": "requirements", "role": "product_manager", "title": "定义最小产品", "depends": ["domain"], "report": "需求文档.md", "prompt": "依据研究结果、领域约束与项目简报，明确选定方向、用户任务、核心流程、最小范围、验收标准和停止条件。明确游戏或工具、目标购买方及本轮需要的美术和音频。若多个方向仍未选择，输出 blocked 并说明所需决策。 用职责技能中的需求模板给 AC 编号及自动/人工验证方式，订阅、账户与本地化要求仅在项目适用时纳入。"},
@@ -28,7 +28,7 @@
     ]
   },
   "design": {
-    "name": "原型、独立评审与修改", "docs": "文档/03-设计评审", "requires": "product",
+    "name": "原型、独立评审与修改", "docs": "docs/03-design", "requires": "product",
     "tasks": [
       {"id": "art", "role": "art_director", "title": "制作美术资产与接入规范", "depends": [], "report": "美术说明.md", "outputs": ["design/art/"], "prompt": "根据已确认需求和玩法制作本轮必需美术，保存实际文件到 design/art/ 并在 artifacts 列出，记录来源、授权、性能和占位状态。无专门美术需求时说明不适用；有必需需求而无法交付时 blocked。"},
       {"id": "audio", "role": "audio_designer", "title": "制作音频素材与事件表", "depends": [], "report": "音频说明.md", "outputs": ["design/audio/"], "prompt": "根据需求与玩法制作本轮必需音频，保存实际文件到 design/audio/ 并在 artifacts 列出，交付触发、混音、授权和播放检查。无音频需求时说明不适用；不能用文字说明代替必需音频文件。"},
@@ -46,7 +46,7 @@
     ]
   },
   "build": {
-    "name": "开发、测试与修复", "docs": "文档/04-开发验收", "requires": "design",
+    "name": "开发、测试与修复", "docs": "docs/04-build", "requires": "design",
     "tasks": [
       {"id": "implementation", "role": "developer", "title": "实现可运行的最小产品", "depends": [], "artifact_prefix": "app/", "report": "开发说明.md", "outputs": ["app/"], "prompt": "依据已确认产品、技术方案、安全要求与原型开发 app/，接入适用的美术、音频、关卡、数值及指标。交付运行说明和必要测试，执行实际检查，不发布生产、不创建付费资源。 先读所绑定开发技能，按实际技术栈使用编码、生命周期、日志与本地化规范；适用购买功能须交付权益状态及测试证据。"},
       {"id": "test", "role": "qa_engineer", "title": "独立测试与缺陷报告", "depends": ["implementation"], "report": "测试报告.md", "outputs": ["app/"], "prompt": "独立核对验收标准，运行可用的测试及操作检查，记录缺陷与未验证范围。本任务可完成缺陷报告，下游工程师据此修复。"},
@@ -59,7 +59,7 @@
     ]
   },
   "launch": {
-    "name": "上线准备与运营方案", "docs": "文档/05-上线准备", "requires": "build",
+    "name": "上线准备与运营方案", "docs": "docs/05-launch", "requires": "build",
     "tasks": [
       {"id": "release", "role": "release_engineer", "title": "准备发布与恢复方案", "depends": [], "report": "发布方案.md", "outputs": ["release/"], "prompt": "检查当前构建、环境依赖、配置、素材来源、监控和回滚；生成发布操作方案。当前工作流只做准备，不执行生产发布。 按发布技能核对指定 build、商店资料、适用隐私/SDK 与订阅配置；区分准备、上传、分发、提审和发布。"},
       {"id": "marketing", "role": "product_marketer", "title": "准备产品营销与商店内容", "depends": [], "report": "营销方案.md", "outputs": ["store/"], "prompt": "依据已实现版本交付定位、核心卖点、目标语言落地页或商店页文案、演示脚本与宣传资产清单。检查卖点是否有实际能力支持，明确已完成素材与待制作项，不虚构用户评价。"},
@@ -72,7 +72,7 @@
     ]
   },
   "growth": {
-    "name": "真实数据驱动的运营迭代", "docs": "文档/06-运营迭代", "requires": "launch",
+    "name": "真实数据驱动的运营迭代", "docs": "docs/06-growth", "requires": "launch",
     "tasks": [
       {"id": "analysis", "role": "data_analyst", "title": "分析真实用户与收入数据", "depends": [], "report": "数据分析.md", "prompt": "读取 input/ 中的真实数据、来源说明和上线记录。无真实数据或上线记录时 blocked，列出所需数据；不产生示例经营结论。"},
       {"id": "support_feedback", "role": "customer_success", "title": "整理真实支持与流失反馈", "depends": ["analysis"], "report": "支持反馈分析.md", "prompt": "分析 input/ 中有来源的工单、入门障碍、退款和流失记录，形成问题分级与改进建议。没有支持记录时交付采集缺口，不伪造记录或把没有记录理解为没有问题。"},

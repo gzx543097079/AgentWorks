@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .core import DOCS, EMBEDDED, EMBEDDED_META, LEGACY_META, ROOT, WorksError, now
+from .core import DOCS, EMBEDDED, EMBEDDED_META, LEGACY_META, RENAMED_DOCS, ROOT, WorksError, now
 
 ENGINE = ".agentworks/engine"
 MANIFEST = ENGINE + "/install.json"
@@ -32,7 +32,7 @@ RULES = """{start}
 - 运行团队先读技能 `agentworks`（Codex `$agentworks`，Claude `/agentworks`）和 `.agentworks/engine/docs/团队运行手册.md`。原生角色名称以 `agentworks-` 开头，位于 `.codex/agents/` 与 `.claude/agents/`。
 - 手册中的 `config/`、`docs/`、`roles/` 在本仓库位于 `.agentworks/engine/` 下；技能位于 `.agents/skills/`（Claude 为 `.claude/skills/`）。
 - 进度接口：在仓库根目录运行 Python，先 `sys.path.insert(0, ".agentworks/engine")`，再 `from agentworks.desktop import Workspace; team = Workspace()`，用法见 `.agentworks/engine/docs/桌面内部接口.md`。本仓库只绑定一个项目，开始前先 `team.status()`。
-- 团队产出都是本项目的文件，按类别放在项目目录并随仓库提交：各阶段报告在 `文档/01-机会研究/` 至 `文档/06-运营迭代/`；项目简报、项目记忆和输入资料在 `文档/`；原型 `design/prototype/`、UI 设计稿 `design/ui/`、美术与动画 `design/art/`、音频 `design/audio/`；源代码 `app/`；发布配置 `release/`；商店文案与截图 `store/`；获客素材 `marketing/`；帮助内容 `support/`。`文档/输入资料/` 中的真实用户资料默认不提交。
+- 团队产出都是本项目的文件，按类别放在项目目录并随仓库提交：各阶段报告在 `docs/01-discovery/` 至 `docs/06-growth/`；项目简报、项目记忆和输入资料在 `docs/`；原型 `design/prototype/`、UI 设计稿 `design/ui/`、美术与动画 `design/art/`、音频 `design/audio/`；源代码 `app/`；发布配置 `release/`；商店文案与截图 `store/`；获客素材 `marketing/`；帮助内容 `support/`。`docs/inputs/` 中的真实用户资料默认不提交。
 - `.agentworks/` 只保存工具内部的状态库、任务包和执行凭据。每个阶段验收通过后提醒用户提交项目，或在用户授权下提交。
 - 全部角色按20年资深从业者标准工作，这是专业判断框架，不能冒充真实履历。AI 用户评审标记模拟；真实用户反馈、使用数据和收入分开记录并附来源。
 - 工作流依赖和阶段验收不能绕过。分配前 `begin` 登记，完成后用该次 ticket `complete`；可写任务独占批次，独立只读任务可并行。
@@ -157,10 +157,28 @@ def install(project, source=ROOT):
             "project": str(project), "version": version, "source_commit": commit, "files": len(files), "changed": changed}
 
 
+def merge_into(source, destination, project, moved):
+    """Move files from an old folder into its new name without replacing anything already there."""
+    for path in sorted(source.rglob("*"), reverse=True):
+        relative = path.relative_to(source)
+        target_path = destination / Path(*[RENAMED_DOCS.get(part, part) for part in relative.parts])
+        if path.is_file() and not path.is_symlink() and not target_path.exists():
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            path.rename(target_path)
+            moved.append(str(target_path.relative_to(project)) + "（自 " + str(path.relative_to(project)) + " 迁移）")
+        elif path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
+    if source.is_dir() and not any(source.iterdir()):
+        source.rmdir()
+
+
 def migrate(project):
-    """Move a pre-1.2.0 brief, memory and inputs out of .agentworks/ into the project's documents."""
+    """Move older layouts into docs/: .agentworks/ meta files (before 1.2.0) and 1.2.0's 文档/ folders."""
     moved = []
     docs = project / DOCS
+    for old, new in RENAMED_DOCS.items():
+        if new == DOCS and (project / old).is_dir() and not (project / old).is_symlink():
+            merge_into(project / old, docs, project, moved)
     for folder in sorted((project / ".agentworks/projects").glob("*")):
         for key in ("brief", "memory", "input"):
             old, new = folder / LEGACY_META[key], docs / EMBEDDED_META[key]

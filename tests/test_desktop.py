@@ -36,7 +36,7 @@ class DesktopTests(unittest.TestCase):
             task = other.begin("alpha", "claude-code-desktop")[0]
             # Upstream reports are referenced by path, not inlined.
             self.assertNotIn("本地测试资料", task["prompt"])
-            self.assertIn("文档/01-机会研究/游戏机会.md", task["prompt"])
+            self.assertIn("docs/01-discovery/游戏机会.md", task["prompt"])
             self.assertIn("本地测试资料", Path(json.loads(task["prompt"].split("任务上下文：\n", 1)[1])["dependencies"][0]["report_file"]).read_text(encoding="utf-8"))
             other.complete("alpha", task["ticket"], result())
             tasks = self.desktop.status("alpha")["stages"][0]["tasks"]
@@ -181,7 +181,7 @@ class DesktopTests(unittest.TestCase):
         self.assertEqual(self.desktop.complete("alpha", task["ticket"]), "completed")
         names = sorted(path.name for path in run.iterdir())
         self.assertEqual(names, ["1-attempt-1-desktop.json", "1-attempt-1-prompt.txt", "1-attempt-1-result.json"])
-        report = self.desktop.store.workspace("alpha") / "文档/01-机会研究/游戏机会.md"
+        report = self.desktop.store.workspace("alpha") / "docs/01-discovery/游戏机会.md"
         self.assertEqual(report.read_text(encoding="utf-8").strip(), result()["report"])
 
     def test_artifacts_must_stay_in_task_output_folders(self):
@@ -195,9 +195,9 @@ class DesktopTests(unittest.TestCase):
         value["artifacts"] = ["notes/raw.csv"]
         with self.assertRaises(WorksError):
             self.desktop.complete("alpha", task["ticket"], value)
-        snapshot = workspace / "文档/01-机会研究/榜单快照.csv"
+        snapshot = workspace / "docs/01-discovery/榜单快照.csv"
         snapshot.write_text("rank,title", encoding="utf-8")
-        value["artifacts"] = ["文档/01-机会研究/榜单快照.csv"]
+        value["artifacts"] = ["docs/01-discovery/榜单快照.csv"]
         self.assertEqual(self.desktop.complete("alpha", task["ticket"], value), "completed")
 
     def test_reports_from_older_stages_are_published_into_project_folders(self):
@@ -215,11 +215,25 @@ class DesktopTests(unittest.TestCase):
             for row in db.execute("SELECT id, spec FROM tasks WHERE run=?", (run["id"],)).fetchall():
                 spec = json.loads(row["spec"]); spec.pop("report")
                 db.execute("UPDATE tasks SET spec=? WHERE id=?", (json.dumps(spec, ensure_ascii=False), row["id"]))
-        report = store.workspace("alpha") / "文档/01-机会研究/游戏机会.md"
+        report = store.workspace("alpha") / "docs/01-discovery/游戏机会.md"
         report.unlink()
-        self.assertEqual(self.desktop.publish("alpha"), ["文档/01-机会研究/游戏机会.md"])
+        self.assertEqual(self.desktop.publish("alpha"), ["docs/01-discovery/游戏机会.md"])
         self.assertTrue(report.is_file())
         self.assertEqual(self.desktop.publish("alpha"), [])
+
+    def test_stage_planned_with_chinese_folders_reports_into_english_folders(self):
+        store = self.desktop.store
+        run = store.latest("alpha")
+        config = json.loads(run["config"])
+        config["flow"]["docs"] = "文档/01-机会研究"
+        with store.db() as db:
+            db.execute("UPDATE runs SET config=? WHERE id=?", (json.dumps(config, ensure_ascii=False), run["id"]))
+        task = self.desktop.begin("alpha", "codex-desktop")[0]
+        self.assertIn('"report_file": "docs/01-discovery/游戏机会.md"', task["prompt"])
+        self.desktop.complete("alpha", task["ticket"], result())
+        workspace = store.workspace("alpha")
+        self.assertTrue((workspace / "docs/01-discovery/游戏机会.md").is_file())
+        self.assertFalse((workspace / "文档").exists())
 
     def test_tasks_limited_to_other_kinds_are_not_planned(self):
         for kind, absent, present in (("game", "tools", "games"), ("tool", "games", "tools")):

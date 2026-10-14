@@ -17,9 +17,12 @@ SKILLS_ROOT = PRODUCT_ROOT or ROOT
 
 
 KINDS = ("compare", "game", "tool")
-# Embedded mode keeps the project's own knowledge in its 文档/ folder.
-DOCS = "文档"
-EMBEDDED_META = {"brief": "项目简报.md", "memory": "项目记忆.md", "input": "输入资料"}
+# Embedded mode keeps the project's own knowledge in its docs/ folder; file names stay Chinese.
+DOCS = "docs"
+EMBEDDED_META = {"brief": "项目简报.md", "memory": "项目记忆.md", "input": "inputs"}
+# 1.2.0 used Chinese folder names; upgrades move them to the English ones.
+RENAMED_DOCS = {"文档": DOCS, "01-机会研究": "01-discovery", "02-产品定义": "02-product", "03-设计评审": "03-design",
+                "04-开发验收": "04-build", "05-上线准备": "05-launch", "06-运营迭代": "06-growth", "输入资料": "inputs"}
 LEGACY_META = {"brief": "BRIEF.md", "memory": "MEMORY.md", "input": "input"}
 
 

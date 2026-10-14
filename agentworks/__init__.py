@@ -1,3 +1,3 @@
 """AgentWorks: shared project state for native desktop agents; no model launcher."""
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"

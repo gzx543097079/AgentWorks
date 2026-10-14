@@ -14,6 +14,7 @@ from pathlib import Path
 from .core import ROOT, Store, WorksError, load_config, read_json, write_json
 from .runner import packet, run_tasks, submit
 from .backup import restore
+from .backends import BACKENDS
 
 
 def doctor():
@@ -21,14 +22,22 @@ def doctor():
     print("AgentWorks 配置正常：%s 个资深角色，%s 个工作流。" % (len(team["roles"]), len(flows)))
     sync = subprocess.run([sys.executable, str(ROOT / "scripts/sync_agents.py"), "--check"], capture_output=True, text=True)
     print(sync.stdout.strip())
-    binary = shutil.which("codex")
-    if binary:
-        version = subprocess.run([binary, "--version"], capture_output=True, text=True, timeout=15)
-        auth = subprocess.run([binary, "login", "status"], capture_output=True, text=True, timeout=15)
-        print(version.stdout.strip())
-        print("Codex 登录：" + ("已登录" if auth.returncode == 0 else "尚未登录；可运行 codex login"))
-    else:
-        print("未发现 Codex CLI；仍可通过 Codex 对话使用固定角色和导出的任务包。")
+    for backend in BACKENDS:
+        binary = shutil.which(backend)
+        if not binary:
+            print(backend + " CLI：未检测到（不影响当前对话通过 packet / submit 使用团队）。")
+            continue
+        try:
+            version = subprocess.run([binary, "--version"], capture_output=True, text=True, timeout=15)
+            print(backend + "：" + (version.stdout.strip() if version.returncode == 0 else "版本检查失败"))
+            if backend == "codex":
+                auth = subprocess.run([binary, "login", "status"], capture_output=True, text=True, timeout=15)
+                print("Codex 登录：" + ("已登录" if auth.returncode == 0 else "尚未登录；可运行 codex login"))
+            else:
+                print("Claude 登录和模型连通性尚未验证；版本检查不会调用模型。")
+        except (OSError, subprocess.SubprocessError) as exc:
+            print(backend + " 检查失败：" + str(exc))
+    print("原生对话入口：AGENTS.md；Claude 兼容入口：CLAUDE.md；其他环境可读取 AGENT.md。")
     print("运行数据默认保存在 .agentworks/，不会进入 Git。当前系统未安装常驻服务。")
     return sync.returncode
 
@@ -102,7 +111,9 @@ def parser():
     for name in ("run", "continue"):
         run = commands.add_parser(name, help="执行当前阶段的就绪任务；默认只预览")
         run.add_argument("project")
-        run.add_argument("--execute", action="store_true", help="调用已登录的 Codex，实际使用模型额度")
+        run.add_argument("--execute", action="store_true", help="调用所选 CLI，实际使用该账号模型额度")
+        run.add_argument("--backend", choices=["auto", *BACKENDS], default="auto",
+                         help="auto 仅在恰好安装一个 CLI 时自动选择；可指定 codex 或 claude")
         run.add_argument("--max-tasks", type=int, default=1)
         run.add_argument("--workers", type=int, default=2)
         run.add_argument("--timeout", type=int, default=900)
@@ -167,7 +178,7 @@ def main(argv=None):
                     raise KeyboardInterrupt()
                 previous_handler = signal.signal(signal.SIGTERM, interrupted)
                 try:
-                    results = run_tasks(store, args.project, args.max_tasks, args.workers, args.timeout, args.model, not args.no_search)
+                    results = run_tasks(store, args.project, args.max_tasks, args.workers, args.timeout, args.model, not args.no_search, backend=args.backend)
                 finally:
                     signal.signal(signal.SIGTERM, previous_handler)
                 status(store, args.project)

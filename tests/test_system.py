@@ -239,7 +239,7 @@ class SystemTests(unittest.TestCase):
         binary = Path(self.temp.name) / "codex-stub"
         binary.write_text("#!" + sys.executable + "\n" + body)
         binary.chmod(0o755)
-        return patch("agentworks.runner.shutil.which", return_value=str(binary))
+        return patch("agentworks.backends.shutil.which", side_effect=lambda name: str(binary) if name == "codex" else None)
 
     def test_process_adapter_persists_structured_result(self):
         run = self.store.plan("alpha", "discovery")

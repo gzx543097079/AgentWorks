@@ -1,14 +1,14 @@
-"""Bounded Codex workers. Read-only tasks may overlap; writers run alone."""
+"""Bounded workers across backends. Read-only tasks may overlap; writers run alone."""
 import concurrent.futures
 import json
 import os
-import shutil
 import signal
 import subprocess
 import threading
 from pathlib import Path
 
 from .core import ROOT, WorksError, read_json, validate_result, write_json
+from .backends import build_command, read_response, resolve_backend
 
 _processes = set()
 _process_lock = threading.Lock()
@@ -49,6 +49,7 @@ def packet(store, project, task):
         "dependencies": [{"task": t["code"], "result": t["result"]} for t in dependencies],
         "previous_stages": history
     }
+    context["output_schema"] = read_json(ROOT / "config/result.schema.json")
     return "\n\n".join([
         "你是 AgentWorks 已分配任务的单角色执行者。不得运行编排器、启动其他 agent 或递归创建任务。",
         team["standard"], "\n".join(team["shared_instructions"]),
@@ -63,24 +64,6 @@ def packet(store, project, task):
     ])
 
 
-def build_command(workspace, output, model=None, search=True, writable=False):
-    binary = shutil.which("codex")
-    if not binary:
-        raise WorksError("未找到 Codex CLI；可在 Codex 对话中通过 packet 和 submit 执行同一任务。")
-    cmd = [binary]
-    if search:
-        cmd.append("--search")
-    # 'never' means fail closed when an action needs additional permission.
-    cmd += ["-a", "never", "exec", "--json", "--color", "never", "--skip-git-repo-check",
-            "--sandbox", "workspace-write" if writable else "read-only",
-            "-c", "agents.enabled=false", "-C", str(workspace),
-            "--output-schema", str(ROOT / "config/result.schema.json"),
-            "--output-last-message", str(output)]
-    if model:
-        cmd += ["--model", model]
-    return cmd + ["-"]
-
-
 def stop_process(process):
     try:
         os.killpg(process.pid, signal.SIGTERM)
@@ -91,7 +74,8 @@ def stop_process(process):
             process.wait()
 
 
-def execute(store, project, run, task, timeout, model=None, search=True):
+def execute(store, project, run, task, timeout, model=None, search=True, backend="auto"):
+    backend = resolve_backend(backend)
     directory = run_dir(store, project, run["id"])
     directory.mkdir(parents=True, exist_ok=True)
     attempt = task["attempts"] + 1
@@ -99,15 +83,20 @@ def execute(store, project, run, task, timeout, model=None, search=True):
     response = Path(str(prefix) + "-response.json")
     process_marker = Path(str(prefix) + "-process.json")
     prompt = packet(store, project, task)
+    if backend == "claude":
+        prompt += "\n\n本次后台工具能力：可读文件，按开关提供网页搜索；可写角色可编辑 design/ 和 app/。没有 Shell、浏览器、图像或 MCP 工具。需要实际运行程序或渲染验收时返回 blocked，交由交互会话接续，不得以静态阅读替代实际测试。"
     Path(str(prefix) + "-prompt.txt").write_text(prompt, encoding="utf-8")
     cmd = build_command(store.workspace(project), response, model, search,
-                        role_for(run, task)["mode"] == "workspace-write")
+                        role_for(run, task)["mode"] == "workspace-write", backend)
+    write_json(Path(str(prefix) + "-execution.json"), {"backend": backend, "model": model,
+               "search": search, "mode": role_for(run, task)["mode"]})
+    stdout = Path(str(prefix) + ("-events.jsonl" if backend == "codex" else "-stdout.json"))
     store.claim(task)
     process = None
     try:
-        with Path(str(prefix) + "-events.jsonl").open("w") as events, Path(str(prefix) + "-stderr.txt").open("w") as errors:
+        with stdout.open("w", encoding="utf-8") as events, Path(str(prefix) + "-stderr.txt").open("w", encoding="utf-8") as errors:
             process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=events, stderr=errors,
-                                       text=True, start_new_session=True)
+                                       text=True, encoding="utf-8", cwd=store.workspace(project), start_new_session=True)
             with _process_lock:
                 _processes.add(process)
             write_json(process_marker, {"pid": process.pid})
@@ -117,10 +106,9 @@ def execute(store, project, run, task, timeout, model=None, search=True):
                 stop_process(process)
                 raise WorksError("执行超时；产物和日志已保存，请检查后决定是否重试。")
             if process.returncode != 0:
-                raise WorksError("Codex 执行失败，退出码 " + str(process.returncode) + "；查看 " + str(prefix) + "-stderr.txt")
-        if not response.is_file():
-            raise WorksError("Codex 未生成结构化结果。")
-        result = validate_result(read_json(response), store.workspace(project), task["spec"])
+                raise WorksError(backend + " 执行失败，退出码 " + str(process.returncode) + "；查看 " + str(prefix) + "-stderr.txt")
+        result = validate_result(read_response(backend, response, stdout), store.workspace(project), task["spec"])
+        write_json(response, result)
         save_result(store, project, task, result)
         return store.finish(project, task, result=result)
     except BaseException as exc:
@@ -159,13 +147,16 @@ def submit(store, project, task_id, path):
             raise
 
 
-def run_tasks(store, project, max_tasks=1, workers=2, timeout=900, model=None, search=True, execute_fn=execute):
+def run_tasks(store, project, max_tasks=1, workers=2, timeout=900, model=None, search=True, execute_fn=execute, backend="auto"):
     if not 1 <= workers <= 3 or not 1 <= max_tasks <= 50 or not 1 <= timeout <= 3600:
         raise WorksError("并发须为1–3，单次任务数须为1–50，超时须为1–3600秒。")
     with store.lock(project):
         run = store.latest(project)
         if any(t["status"] == "running" for t in store.tasks(run["id"])):
             raise WorksError("发现中断的运行状态，请先 recover 并检查已有产物。")
+        if execute_fn is execute and store.ready(run["id"]):
+            backend = resolve_backend(backend)
+            print("运行后端：" + backend, flush=True)
         completed = []
         while len(completed) < max_tasks:
             ready = store.ready(run["id"])
@@ -176,7 +167,7 @@ def run_tasks(store, project, max_tasks=1, workers=2, timeout=900, model=None, s
                 t for t in ready if role_for(run, t)["mode"] == "read-only"
             ][:min(workers, max_tasks - len(completed))]
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(batch)) as pool:
-                futures = {pool.submit(execute_fn, store, project, run, task, timeout, model, search): task for task in batch}
+                futures = {pool.submit(execute_fn, store, project, run, task, timeout, model, search, backend): task for task in batch}
                 try:
                     for future in concurrent.futures.as_completed(futures):
                         task = futures[future]
